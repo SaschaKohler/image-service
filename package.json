@@ -19,8 +19,14 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0",
     "jest": "^29.7.0",
     "nodemon": "^2.0.22",
     "request": "^2.88.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
