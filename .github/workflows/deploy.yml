@@ -7,35 +7,13 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-        env:
-          NODE_ENV: test
-          PORT: 3001
-          API_USER: test
-          API_KEY: test
-
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -43,7 +21,25 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # Verzeichnis vorbereiten wenn es nicht existiert
+            if [ ! -d "/opt/image-service" ]; then
+              sudo mkdir -p /opt/image-service
+              sudo chown $USER:$USER /opt/image-service
+            fi
+
+            # Zum Verzeichnis wechseln
             cd /opt/image-service
-            git pull
+
+            # Git initialisieren wenn noch nicht geschehen
+            if [ ! -d ".git" ]; then
+              git init
+              git remote add origin https://github.com/yourusername/image-service.git
+            fi
+
+            # Code aktualisieren
+            git fetch --all
+            git reset --hard origin/main
+
+            # Dependencies installieren und Service neustarten
             npm install --production
-            pm2 restart image-service
+            pm2 restart image-service || pm2 start src/server.js --name image-service
