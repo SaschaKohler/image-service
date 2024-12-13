@@ -1,0 +1,26 @@
+{
+  "name": "html-to-image-service",
+  "version": "1.0.0",
+  "description": "Local HTML to Image conversion service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-basic-auth": "^1.2.1",
+    "node-html-to-image": "^5.0.0",
+    "puppeteer": "^21.11.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^2.0.22",
+    "request": "^2.88.2"
+  }
+}
