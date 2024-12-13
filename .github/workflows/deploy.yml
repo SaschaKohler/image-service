@@ -21,11 +21,19 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Verzeichnisstruktur erstellen
-            sudo mkdir -p /opt/image-service
-            sudo chown www-data:www-data /opt/image-service
-            sudo chmod 775 /opt/image-service
-            sudo usermod -a -G www-data sebius
+            # Als root ausführen
+            sudo -i bash << 'EOF'
+
+            # Verzeichnisse prüfen/erstellen
+            mkdir -p /var/www/.pm2
+            mkdir -p /var/www/pm2
+            mkdir -p /opt/image-service
+
+            # Berechtigungen setzen
+            chown -R www-data:www-data /var/www/.pm2
+            chown -R www-data:www-data /var/www/pm2
+            chown -R www-data:www-data /opt/image-service
+            chmod -R 775 /opt/image-service
 
             # Zum Verzeichnis wechseln
             cd /opt/image-service
@@ -41,6 +49,14 @@ jobs:
             sudo -u www-data git fetch --all
             sudo -u www-data git reset --hard origin/main
 
-            # Dependencies installieren und Service neustarten
+            # Dependencies installieren
             sudo -u www-data npm install --production
-            sudo -u www-data pm2 restart image-service || sudo -u www-data pm2 start src/server.js --name image-service
+
+            # PM2 als www-data starten
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 restart image-service || sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start src/server.js --name image-service
+
+            # PM2 Startup sicherstellen
+            env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 save
+
+            EOF
