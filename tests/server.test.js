@@ -1,58 +1,125 @@
-// 1. Template erstellen
-async function createTemplate() {
-  const template = {
-    html: `
-      <div class="flex min-h-screen bg-gray-100 items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-          <h1 class="text-2xl font-bold text-gray-800">{{title}}</h1>
-          <p class="text-gray-600 mt-2">{{description}}</p>
-          {{#if imageUrl}}
-            <img src="{{imageUrl}}" class="mt-4 rounded-lg shadow-md w-full">
-          {{/if}}
-          <div class="mt-4 text-sm text-gray-500">
-            Posted by {{author}} on {{date}}
-          </div>
-        </div>
-      </div>
-    `,
-    name: "Blog Post Card",
-    description: "Template for blog post social sharing images",
-    viewport_width: 1200,
-    viewport_height: 630,
-    device_scale: 2,
-  };
+// tests/server.test.js
+const request = require("supertest");
+const path = require("path");
+const { open } = require("sqlite");
+const sqlite3 = require("sqlite3");
+const app = require("../src/server");
 
-  const response = await fetch("http://localhost:3000/v1/template", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(template),
+describe("Template Service API", () => {
+  let testDb;
+
+  beforeAll(async () => {
+    testDb = await open({
+      filename: ":memory:",
+      driver: sqlite3.Database,
+    });
+
+    await testDb.exec(`
+      CREATE TABLE IF NOT EXISTS templates (
+        id TEXT PRIMARY KEY,
+        version INTEGER,
+        html TEXT,
+        css TEXT,
+        name TEXT,
+        description TEXT,
+        google_fonts TEXT,
+        viewport_width INTEGER,
+        viewport_height INTEGER,
+        device_scale REAL,
+        created_at TEXT,
+        updated_at TEXT,
+        user_id TEXT,
+        plan TEXT DEFAULT 'FREE'
+      );
+    `);
+
+    global.db = testDb;
   });
 
-  return response.json();
-}
-
-// 2. Bild aus Template generieren
-async function generateImage(templateId) {
-  const templateValues = {
-    title: "Introducing Our New Feature",
-    description:
-      "A revolutionary way to create social sharing images with templates and variables.",
-    // imageUrl: "https://example.com/feature-preview.jpg",
-    author: "John Doe",
-    date: new Date().toLocaleDateString(),
-  };
-
-  const response = await fetch(`http://localhost:3000/v1/image/${templateId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ template_values: templateValues }),
+  afterAll(async () => {
+    await testDb?.close();
   });
 
-  return response.json();
-}
+  beforeEach(async () => {
+    // Datenbank vor jedem Test leeren
+    await testDb.exec("DELETE FROM templates");
+  });
 
-// Nutzung
-createTemplate()
-  .then((template) => generateImage(template.template_id))
-  .then((image) => console.log("Generated image:", image.url))
-  .catch(console.error);
+  describe("Template Creation", () => {
+    test("POST /v1/template requires HTML", async () => {
+      // Für diesen Test einen neuen User verwenden, der noch kein Template hat
+      const response = await request(app)
+        .post("/v1/template")
+        .set("x-user-id", "html-test-user-" + Date.now()) // Garantiert eindeutige User-ID
+        .set("x-user-plan", "FREE")
+        .send({
+          name: "Test Template",
+          // html fehlt absichtlich
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("message", "HTML is Required");
+    });
+
+    test("POST /v1/template creates template successfully", async () => {
+      const uniqueUserId = "create-test-user-" + Date.now();
+
+      const response = await request(app)
+        .post("/v1/template")
+        .set("x-user-id", uniqueUserId) // Eindeutige User-ID
+        .set("x-user-plan", "FREE")
+        .send({
+          html: "<div>Test Template</div>",
+          name: "Test Template",
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty("template_id");
+      expect(response.body).toHaveProperty("template_version");
+    });
+
+    test("POST /v1/template enforces plan limits", async () => {
+      // Ersten Template erstellen
+      await request(app)
+        .post("/v1/template")
+        .set("x-user-id", "limit-test-user")
+        .set("x-user-plan", "FREE")
+        .send({
+          html: "<div>Template 1</div>",
+        });
+
+      // Zweiter Template sollte fehlschlagen
+      const response = await request(app)
+        .post("/v1/template")
+        .set("x-user-id", "limit-test-user")
+        .set("x-user-plan", "FREE")
+        .send({
+          html: "<div>Template 2</div>",
+        });
+
+      expect(response.status).toBe(429);
+      expect(response.body).toHaveProperty("error", "Plan limit exceeded");
+    });
+  });
+
+  describe("Template Listing", () => {
+    test("GET /v1/template lists user templates", async () => {
+      await request(app)
+        .post("/v1/template")
+        .set("x-user-id", "list-test-user")
+        .set("x-user-plan", "FREE")
+        .send({
+          html: "<div>Test Template</div>",
+        });
+
+      const response = await request(app)
+        .get("/v1/template")
+        .set("x-user-id", "list-test-user");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.data.length).toBe(1);
+      expect(response.body.data[0].html).toBe("<div>Test Template</div>");
+    });
+  });
+});

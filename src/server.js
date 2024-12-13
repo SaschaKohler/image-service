@@ -59,7 +59,7 @@ let db;
 async function checkTemplateLimit(userId, plan) {
   const count = await db.get(
     "SELECT COUNT(*) as count FROM templates WHERE user_id = ?",
-    userId,
+    userId
   );
 
   const limit = CONFIG.TEMPLATE_LIMITS[plan];
@@ -101,7 +101,9 @@ app.post("/v1/template", async (req, res) => {
       });
     }
 
-    const templateId = `t-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    const templateId = `t-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}`;
     const templateVersion = Date.now();
 
     await db.run(
@@ -127,7 +129,7 @@ app.post("/v1/template", async (req, res) => {
         new Date().toISOString(),
         userId,
         userPlan,
-      ],
+      ]
     );
 
     res.status(201).json({
@@ -147,7 +149,7 @@ app.get("/v1/template", async (req, res) => {
 
     const templates = await db.all(
       "SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC",
-      userId,
+      userId
     );
 
     res.json({
@@ -176,3 +178,5 @@ app.get("/v1/template", async (req, res) => {
     process.exit(1);
   }
 })();
+
+module.exports = app; // Exportiere die app
