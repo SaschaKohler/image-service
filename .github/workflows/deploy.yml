@@ -21,25 +21,26 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Verzeichnis vorbereiten wenn es nicht existiert
-            if [ ! -d "/opt/image-service" ]; then
-              sudo mkdir -p /opt/image-service
-              sudo chown $USER:$USER /opt/image-service
-            fi
+            # Verzeichnisstruktur erstellen
+            sudo mkdir -p /opt/image-service
+            sudo chown www-data:www-data /opt/image-service
+            sudo chmod 775 /opt/image-service
+            sudo usermod -a -G www-data sebius
 
             # Zum Verzeichnis wechseln
             cd /opt/image-service
 
-            # Git initialisieren wenn noch nicht geschehen
+            # Git als www-data initialisieren
             if [ ! -d ".git" ]; then
-              git init
-              git remote add origin https://github.com/yourusername/image-service.git
+              sudo -u www-data git init
+              sudo -u www-data git config --global --add safe.directory /opt/image-service
+              sudo -u www-data git remote add origin https://github.com/SaschaKohler/image-service.git
             fi
 
             # Code aktualisieren
-            git fetch --all
-            git reset --hard origin/main
+            sudo -u www-data git fetch --all
+            sudo -u www-data git reset --hard origin/main
 
             # Dependencies installieren und Service neustarten
-            npm install --production
-            pm2 restart image-service || pm2 start src/server.js --name image-service
+            sudo -u www-data npm install --production
+            sudo -u www-data pm2 restart image-service || sudo -u www-data pm2 start src/server.js --name image-service
