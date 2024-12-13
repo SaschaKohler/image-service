@@ -24,39 +24,32 @@ jobs:
             # Als root ausführen
             sudo -i bash << 'EOF'
 
-            # Verzeichnisse prüfen/erstellen
+            # Verzeichnisse vorbereiten
             mkdir -p /var/www/.pm2
-            mkdir -p /var/www/pm2
             mkdir -p /opt/image-service
-
-            # Berechtigungen setzen
             chown -R www-data:www-data /var/www/.pm2
-            chown -R www-data:www-data /var/www/pm2
             chown -R www-data:www-data /opt/image-service
-            chmod -R 775 /opt/image-service
 
-            # Zum Verzeichnis wechseln
+            # Repository neu aufsetzen
             cd /opt/image-service
-
-            # Git als www-data initialisieren
-            if [ ! -d ".git" ]; then
-              sudo -u www-data git init
-              sudo -u www-data git config --global --add safe.directory /opt/image-service
-              sudo -u www-data git remote add origin https://github.com/SaschaKohler/image-service.git
-            fi
-
-            # Code aktualisieren
-            sudo -u www-data git fetch --all
+            rm -rf .git  # Bestehende Git-Konfiguration entfernen
+            sudo -u www-data git init
+            sudo -u www-data git config --global --add safe.directory /opt/image-service
+            sudo -u www-data git remote add origin https://github.com/SaschaKohler/image-service.git
+            sudo -u www-data git fetch origin
+            sudo -u www-data git checkout -B main
             sudo -u www-data git reset --hard origin/main
 
-            # Dependencies installieren
+            # Node.js Setup
             sudo -u www-data npm install --production
 
-            # PM2 als www-data starten
-            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 restart image-service || sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start src/server.js --name image-service
-
-            # PM2 Startup sicherstellen
-            env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
+            # PM2 Setup
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 delete image-service || true
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start src/server.js --name image-service
             sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 save
 
+            # PM2 Startup
+            env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
+            systemctl enable pm2-www-data
+            systemctl start pm2-www-data
             EOF
