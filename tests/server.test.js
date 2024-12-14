@@ -3,7 +3,7 @@ const request = require("supertest");
 const path = require("path");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
-const app = require("../src/server");
+const { app, db, setDb } = require("../src/server");
 
 describe("Template Service API", () => {
   let testDb;
@@ -43,6 +43,48 @@ describe("Template Service API", () => {
   beforeEach(async () => {
     // Datenbank vor jedem Test leeren
     await testDb.exec("DELETE FROM templates");
+  });
+
+  describe("Health Endpoint", () => {
+    let originalDb;
+
+    beforeEach(() => {
+      originalDb = db(); // Backup der original DB
+    });
+
+    afterEach(() => {
+      setDb(originalDb); // Stelle original DB wieder her
+    });
+
+    test("GET /health returns healthy status when DB is connected", async () => {
+      const response = await request(app).get("/health");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        status: "healthy",
+        database: "connected",
+      });
+      expect(response.body).toHaveProperty("timestamp");
+    });
+
+    test("GET /health returns unhealthy status when DB is disconnected", async () => {
+      // Mock der DB mit einem fehlschlagenden get()
+      setDb({
+        get: async () => {
+          throw new Error("DB connection lost");
+        },
+      });
+
+      const response = await request(app).get("/health");
+
+      expect(response.status).toBe(503);
+      expect(response.body).toMatchObject({
+        status: "unhealthy",
+        database: "disconnected",
+      });
+      expect(response.body).toHaveProperty("error");
+      expect(response.body).toHaveProperty("timestamp");
+    });
   });
 
   describe("Template Creation", () => {

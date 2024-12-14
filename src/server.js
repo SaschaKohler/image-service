@@ -65,7 +65,30 @@ async function checkTemplateLimit(userId, plan) {
   const limit = CONFIG.TEMPLATE_LIMITS[plan];
   return count.count < limit;
 }
+app.get("/health", async (req, res) => {
+  try {
+    // Prüfe explizit, ob die DB-Verbindung existiert
+    if (!db) {
+      throw new Error("Database connection not initialized");
+    }
 
+    // Versuche eine einfache DB-Abfrage
+    await db.get("SELECT 1");
+
+    return res.status(200).json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      database: "connected",
+    });
+  } catch (error) {
+    return res.status(503).json({
+      status: "unhealthy",
+      timestamp: new Date().toISOString(),
+      database: "disconnected",
+      error: error.message,
+    });
+  }
+});
 // Template erstellen
 app.post("/v1/template", async (req, res) => {
   try {
@@ -179,4 +202,12 @@ app.get("/v1/template", async (req, res) => {
   }
 })();
 
-module.exports = app; // Exportiere die app
+// Exportiere die db Variable für Tests
+module.exports = {
+  app,
+  db: () => db, // Getter Funktion
+  setDb: (newDb) => {
+    // Setter Funktion für Tests
+    db = newDb;
+  },
+};

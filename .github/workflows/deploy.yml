@@ -1,4 +1,4 @@
-name: Deploy Image Service
+name: Regular Deployment
 
 on:
   push:
@@ -14,42 +14,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Server
+      - name: Check Initial Setup Status
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Als root ausführen
-            sudo -i bash << 'EOF'
+            if [ ! -f "/opt/image-service/.initial-setup-complete" ]; then
+              echo "Initial setup has not been performed yet!"
+              exit 1
+            fi
 
-            # Verzeichnisse vorbereiten
-            mkdir -p /var/www/.pm2
-            mkdir -p /opt/image-service
-            chown -R www-data:www-data /var/www/.pm2
-            chown -R www-data:www-data /opt/image-service
-
-            # Repository neu aufsetzen
+      - name: Deploy Updates
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
             cd /opt/image-service
-            rm -rf .git  # Bestehende Git-Konfiguration entfernen
-            sudo -u www-data git init
-            sudo -u www-data git config --global --add safe.directory /opt/image-service
-            sudo -u www-data git remote add origin https://github.com/SaschaKohler/image-service.git
-            sudo -u www-data git fetch origin
-            sudo -u www-data git checkout -B main
-            sudo -u www-data git reset --hard origin/main
 
-            # Node.js Setup
-            sudo -u www-data npm install --production
+            # Pull latest changes
+            sudo -u www-data git pull origin main
 
-            # PM2 Setup
-            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 delete image-service || true
-            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start src/server.js --name image-service
-            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 save
+            # Install only if package.json changed
+            if git diff --quiet HEAD@{1} HEAD -- package.json; then
+              echo "No changes in package.json, skipping npm install"
+            else
+              echo "Changes detected in package.json, running npm install"
+              sudo -u www-data npm install --production
+            fi
 
-            # PM2 Startup
-            env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
-            systemctl enable pm2-www-data
-            systemctl start pm2-www-data
-            EOF
+            # Gracefully reload the service
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 reload image-service

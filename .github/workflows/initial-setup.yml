@@ -1,0 +1,64 @@
+name: Initial Server Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_setup:
+        description: "Confirm initial server setup"
+        required: true
+        type: boolean
+
+jobs:
+  initial-setup:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.server_setup == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initial Server Setup
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Als root ausführen
+            sudo -i bash << 'EOF'
+
+            # Verzeichnisse vorbereiten
+            mkdir -p /var/www/.pm2
+            mkdir -p /opt/image-service
+            chown -R www-data:www-data /var/www/.pm2
+            chown -R www-data:www-data /opt/image-service
+
+            # Repository neu aufsetzen
+            cd /opt/image-service
+            rm -rf .git  # Bestehende Git-Konfiguration entfernen
+            sudo -u www-data git init
+            sudo -u www-data git config --global --add safe.directory /opt/image-service
+            sudo -u www-data git remote add origin https://github.com/SaschaKohler/image-service.git
+            sudo -u www-data git fetch origin
+            sudo -u www-data git checkout -B main
+            sudo -u www-data git reset --hard origin/main
+
+            # Node.js Setup
+            sudo -u www-data npm install --production
+
+            # PM2 Setup
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 delete image-service || true
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 start src/server.js --name image-service
+            sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 save
+
+            # PM2 Startup
+            env PATH=$PATH:/usr/bin PM2_HOME=/var/www/.pm2 pm2 startup systemd -u www-data --hp /var/www
+            systemctl enable pm2-www-data
+            systemctl start pm2-www-data
+
+            # Markierung für erfolgreichen Setup
+            touch /opt/image-service/.initial-setup-complete
+            EOF
+
+      - name: Switch to Regular Deployment Workflow
+        run: |
+          echo "Initial setup complete. Regular deployments will now use the deploy.yml workflow."
