@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       server_setup:
-        description: "Confirm initial server setup"
+        description: 'Confirm initial server setup'
         required: true
         type: boolean
 
@@ -12,6 +12,7 @@ jobs:
   initial-setup:
     runs-on: ubuntu-latest
     if: github.event.inputs.server_setup == 'true'
+    timeout-minutes: 15 # Erhöhtes Timeout
 
     steps:
       - uses: actions/checkout@v4
@@ -26,24 +27,37 @@ jobs:
             # Als root ausführen
             sudo -i bash << 'EOF'
 
+            # Git global config für www-data
+            sudo -u www-data git config --global init.defaultBranch main
+
             # Verzeichnisse vorbereiten
             mkdir -p /var/www/.pm2
+            mkdir -p /var/www/.npm
             mkdir -p /opt/image-service
+
+            # Berechtigungen setzen
             chown -R www-data:www-data /var/www/.pm2
+            chown -R www-data:www-data /var/www/.npm
             chown -R www-data:www-data /opt/image-service
 
-            # Repository neu aufsetzen
+            # Repository Setup als www-data
             cd /opt/image-service
-            rm -rf .git  # Bestehende Git-Konfiguration entfernen
-            sudo -u www-data git init
-            sudo -u www-data git config --global --add safe.directory /opt/image-service
-            sudo -u www-data git remote add origin https://github.com/SaschaKohler/image-service.git
-            sudo -u www-data git fetch origin
-            sudo -u www-data git checkout -B main
-            sudo -u www-data git reset --hard origin/main
+            rm -rf .git
 
-            # Node.js Setup
-            sudo -u www-data npm install --production
+            # Git Operationen als www-data
+            sudo -u www-data bash << 'WWWDATA'
+            cd /opt/image-service
+            git init
+            git config --global --add safe.directory /opt/image-service
+            git remote add origin https://github.com/SaschaKohler/image-service.git
+            git fetch origin
+            git checkout -B main
+            git reset --hard origin/main
+
+            # NPM Installation mit erhöhtem Timeout
+            npm config set script-timeout 600000
+            npm install --production --no-fund --no-audit
+            WWWDATA
 
             # PM2 Setup
             sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 delete image-service || true
@@ -55,10 +69,6 @@ jobs:
             systemctl enable pm2-www-data
             systemctl start pm2-www-data
 
-            # Markierung für erfolgreichen Setup
+            # Setup-Markierung
             touch /opt/image-service/.initial-setup-complete
             EOF
-
-      - name: Switch to Regular Deployment Workflow
-        run: |
-          echo "Initial setup complete. Regular deployments will now use the deploy.yml workflow."
