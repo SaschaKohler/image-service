@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "HTML to Image Service with Templates",
   "main": "src/server.js",
+  "type": "commonjs",
   "scripts": {
     "test": "jest --detectOpenHandles --forceExit",
+     "test:image": "jest imageGenerator.test.js --detectOpenHandles --forceExit",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "eslint src/",
