@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "jest --detectOpenHandles --forceExit",
-     "test:image": "jest imageGenerator.test.js --detectOpenHandles --forceExit",
+    "test:image": "jest imageGenerator.test.js --detectOpenHandles --forceExit",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "eslint src/",
@@ -25,6 +25,7 @@
     "handlebars": "^4.7.7",
     "helmet": "^8.0.0",
     "node-html-to-image": "^5.0.0",
+    "puppeteer": "^23.10.4",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.6"
   },

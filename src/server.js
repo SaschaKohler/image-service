@@ -6,6 +6,7 @@ const generateImage = require('./imageGenerator');
 const authMiddleware = require('./middleware/auth');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
+const { warn } = require('console');
 
 // Prüfe ob notwendige Umgebungsvariablen gesetzt sind
 const requiredEnvVars = ['API_USER', 'API_KEY'];
@@ -19,6 +20,12 @@ if (missingEnvVars.length > 0) {
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'public')));  // Für statische Dateien
+
+// Serve die Test UI
+app.get('/test', (_, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'test.html'));
+});
 
 // Konfiguration
 const CONFIG = {
@@ -127,6 +134,10 @@ app.post('/v1/template', async (req, res) => {
         message: 'HTML is Required',
       });
     }
+    // Konvertiere leere Strings zu null
+    const parsedWidth = viewport_width ? parseInt(viewport_width) : null;
+    const parsedHeight = viewport_height ? parseInt(viewport_height) : null;
+    const parsedScale = device_scale ? parseFloat(device_scale) : null;
 
     const templateId = `t-${Date.now()}-${Math.random().toString(36).substring(2)}`;
     const templateVersion = Date.now();
@@ -144,10 +155,10 @@ app.post('/v1/template', async (req, res) => {
         css,
         name,
         description,
-        google_fonts,
-        viewport_width,
-        viewport_height,
-        device_scale,
+        google_fonts || null,
+        parsedWidth,
+        parsedHeight,
+        parsedScale,
         new Date().toISOString(),
         new Date().toISOString(),
         userId,
