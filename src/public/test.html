@@ -1,289 +1,417 @@
-<!-- public/test.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HTML to Image API Tester</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .auth-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-        .editor-container {
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        #htmlEditor, #cssEditor {
-            height: 200px;
-            width: 100%;
-        }
-        .response {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            overflow-x: auto;
-        }
-        .button-group {
-            margin: 20px 0;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .generated-image {
-            max-width: 100%;
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-        }
-        label {
-            display: block;
-            margin: 10px 0 5px;
-            font-weight: bold;
-        }
-        input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 100%;
-            max-width: 300px;
-        }
-        .settings-section {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .editor-container {
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      #htmlEditor,
+      #cssEditor,
+      #templateDataEditor {
+        height: 200px;
+        width: 100%;
+      }
+      .response {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      .button-group {
+        margin: 20px 0;
+        display: flex;
+        gap: 10px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .toggle-button {
+        background: #6c757d;
+      }
+      .toggle-button.active {
+        background: #28a745;
+      }
+      label {
+        display: block;
+        margin: 10px 0 5px;
+        font-weight: bold;
+      }
+      input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 100%;
+        max-width: 300px;
+      }
+      .preview-container {
+        margin-top: 20px;
+        padding: 15px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .tab {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #f8f9fa;
+      }
+      .tab.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>HTML to Image API Tester</h1>
-        
-        <div class="auth-section">
-            <h2>Authentication</h2>
-            <label for="apiUser">API User:</label>
-            <input type="text" id="apiUser" placeholder="Enter API User">
-            
-            <label for="apiKey">API Key:</label>
-            <input type="password" id="apiKey" placeholder="Enter API Key">
+      <div class="user-info">
+        <div class="user-info-grid">
+          <div class="user-details">
+            <div class="user-email" id="userEmail"></div>
+            <div class="api-key" id="apiKey"></div>
+          </div>
+          <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+      </div>
+      <h1>HTML to Image API Tester</h1>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('edit')">Edit</div>
+        <div class="tab" onclick="switchTab('preview')">Preview</div>
+      </div>
+
+      <div id="editTab">
+        <h2>HTML Content</h2>
+        <div>
+          <label>HTML (supports Handlebars variables like {{varName}}):</label>
+          <div class="editor-container">
+            <div id="htmlEditor"></div>
+          </div>
+
+          <label>CSS:</label>
+          <div class="editor-container">
+            <div id="cssEditor"></div>
+          </div>
+
+          <label>Template Variables (JSON):</label>
+          <div class="editor-container">
+            <div id="templateDataEditor"></div>
+          </div>
         </div>
 
         <div class="settings-section">
-            <h2>Settings</h2>
-            <div class="settings-grid">
-                <div>
-                    <label for="googleFonts">Google Fonts:</label>
-                    <input type="text" id="googleFonts" placeholder="e.g., Roboto|Open Sans">
-                </div>
-                <div>
-                    <label for="deviceScale">Device Scale:</label>
-                    <input type="number" id="deviceScale" value="1" min="1" max="3" step="0.1">
-                </div>
-                <div>
-                    <label for="viewportWidth">Viewport Width:</label>
-                    <input type="number" id="viewportWidth" placeholder="e.g., 1024">
-                </div>
-                <div>
-                    <label for="viewportHeight">Viewport Height:</label>
-                    <input type="number" id="viewportHeight" placeholder="e.g., 768">
-                </div>
+          <h2>Settings</h2>
+          <div class="settings-grid">
+            <div>
+              <label for="googleFonts">Google Fonts:</label>
+              <input type="text" id="googleFonts" placeholder="e.g., Roboto|Open Sans" />
             </div>
-        </div>
-
-        <h2>HTML Content</h2>
-        <div>
-            <label>HTML:</label>
-            <div class="editor-container">
-                <div id="htmlEditor"></div>
+            <div>
+              <label for="deviceScale">Device Scale:</label>
+              <input type="number" id="deviceScale" value="1" min="1" max="3" step="0.1" />
             </div>
-            
-            <label>CSS:</label>
-            <div class="editor-container">
-                <div id="cssEditor"></div>
+            <div>
+              <label for="viewportWidth">Viewport Width:</label>
+              <input type="number" id="viewportWidth" placeholder="e.g., 1024" />
             </div>
+            <div>
+              <label for="viewportHeight">Viewport Height:</label>
+              <input type="number" id="viewportHeight" placeholder="e.g., 768" />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div class="button-group">
-            <button onclick="generateImage()">Generate Image</button>
-            <button onclick="createTemplate()">Save as Template</button>
-            <button onclick="listTemplates()">List Templates</button>
-        </div>
+      <div id="previewTab" style="display: none">
+        <h2>Preview</h2>
+        <div id="previewContent" class="preview-container"></div>
+      </div>
 
-        <div id="response" class="response">
-            <p>Response will appear here...</p>
-        </div>
+      <div class="button-group">
+        <button onclick="generateImage()">Generate Image</button>
+        <button onclick="createTemplate()">Save as Template</button>
+        <button onclick="listTemplates()">List Templates</button>
+        <button class="toggle-button" onclick="togglePreview()" id="previewButton">
+          Live Preview
+        </button>
+      </div>
 
-        <img id="generatedImage" class="generated-image" style="display: none;">
+      <div id="response" class="response">
+        <p>Response will appear here...</p>
+      </div>
+
+      <div class="generated-image-container">
+        <img id="generatedImage" class="generated-image" style="display: none" />
+        <div id="imageUrl" class="image-url"></div>
+      </div>
     </div>
 
     <script>
-        // Initialize ACE editors
-        const htmlEditor = ace.edit("htmlEditor");
-        htmlEditor.setTheme("ace/theme/chrome");
-        htmlEditor.session.setMode("ace/mode/html");
-        htmlEditor.setValue('<div style="padding: 20px;">\n  <h1>Hello World!</h1>\n  <p>This is a test image.</p>\n</div>');
+      // Initialize ACE editors
+      const htmlEditor = ace.edit('htmlEditor');
+      htmlEditor.setTheme('ace/theme/chrome');
+      htmlEditor.session.setMode('ace/mode/html');
+      htmlEditor.setValue(`<div class="p-8 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4">
+  <h1 class="text-2xl font-bold text-blue-600">{{title}}</h1>
+  <div class="flex items-center space-x-4">
+    <img src="{{avatarUrl}}" class="w-12 h-12 rounded-full" alt="Avatar">
+    <div>
+      <div class="text-xl font-medium text-black">{{name}}</div>
+      <p class="text-gray-500">{{description}}</p>
+    </div>
+  </div>
+  <div class="bg-gray-100 p-4 rounded">
+    {{message}}
+  </div>
+</div>`);
 
-        const cssEditor = ace.edit("cssEditor");
-        cssEditor.setTheme("ace/theme/chrome");
-        cssEditor.session.setMode("ace/mode/css");
-        cssEditor.setValue('h1 {\n  color: #2196F3;\n}\n\np {\n  color: #666;\n}');
+      const cssEditor = ace.edit('cssEditor');
+      cssEditor.setTheme('ace/theme/chrome');
+      cssEditor.session.setMode('ace/mode/css');
+      cssEditor.setValue('/* Additional CSS here */');
 
-        // API configuration
-        const API_BASE_URL = window.location.origin + '/v1';
+      const templateDataEditor = ace.edit('templateDataEditor');
+      templateDataEditor.setTheme('ace/theme/chrome');
+      templateDataEditor.session.setMode('ace/mode/json');
+      templateDataEditor.setValue(`{
+  "title": "Welcome!",
+  "avatarUrl": "/api/placeholder/48/48",
+  "name": "John Doe",
+  "description": "Software Developer",
+  "message": "This is a test message"
+}`);
 
-        function getAuthHeaders() {
-            const user = document.getElementById('apiUser').value;
-            const key = document.getElementById('apiKey').value;
-            return {
-                'Authorization': 'Basic ' + btoa(user + ':' + key),
-                'Content-Type': 'application/json'
-            };
+      // Setup live preview
+      let previewInterval;
+      function togglePreview() {
+        const button = document.getElementById('previewButton');
+        if (button.classList.contains('active')) {
+          button.classList.remove('active');
+          clearInterval(previewInterval);
+        } else {
+          button.classList.add('active');
+          updatePreview();
+          previewInterval = setInterval(updatePreview, 1000);
+        }
+      }
+
+      function updatePreview() {
+        try {
+          const templateData = JSON.parse(templateDataEditor.getValue());
+          const html = htmlEditor.getValue();
+          const css = cssEditor.getValue();
+
+          // Simple Handlebars-like template processing
+          const processedHtml = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+            return templateData[key] || match;
+          });
+
+          const fullHtml = `
+                    <style>${css}</style>
+                    ${processedHtml}
+                `;
+
+          document.getElementById('previewContent').innerHTML = fullHtml;
+        } catch (error) {
+          console.error('Preview error:', error);
+        }
+      }
+
+      function switchTab(tab) {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(t => t.classList.remove('active'));
+        document
+          .querySelector(`.tab:nth-child(${tab === 'edit' ? '1' : '2'}`)
+          .classList.add('active');
+
+        document.getElementById('editTab').style.display = tab === 'edit' ? 'block' : 'none';
+        document.getElementById('previewTab').style.display = tab === 'preview' ? 'block' : 'none';
+
+        if (tab === 'preview') {
+          updatePreview();
+        }
+      }
+
+      // API configuration
+      const API_BASE_URL = window.location.origin + '/v1';
+
+      function checkAuth() {
+        const email = localStorage.getItem('userEmail');
+        const apiKey = localStorage.getItem('apiKey');
+
+        if (!email || !apiKey) {
+          window.location.href = '/auth.html';
+          return;
         }
 
-        function getSettings() {
-            return {
-                google_fonts: document.getElementById('googleFonts').value,
-                device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
-                viewport_width: parseInt(document.getElementById('viewportWidth').value) || undefined,
-                viewport_height: parseInt(document.getElementById('viewportHeight').value) || undefined
-            };
+        document.getElementById('userEmail').textContent = email;
+        document.getElementById('apiKey').textContent = `API Key: ${apiKey}`;
+      }
+
+      function logout() {
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('apiKey');
+        window.location.href = '/auth.html';
+      }
+
+      checkAuth();
+
+      function getAuthHeaders() {
+        const email = localStorage.getItem('userEmail');
+        const apiKey = localStorage.getItem('apiKey');
+        return {
+          Authorization: 'Basic ' + btoa(email + ':' + apiKey),
+          'Content-Type': 'application/json',
+        };
+      }
+
+      function getSettings() {
+        return {
+          google_fonts: document.getElementById('googleFonts').value,
+          device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
+          viewport_width: parseInt(document.getElementById('viewportWidth').value) || undefined,
+          viewport_height: parseInt(document.getElementById('viewportHeight').value) || undefined,
+        };
+      }
+
+      async function handleResponse(response) {
+        const responseDiv = document.getElementById('response');
+        const generatedImage = document.getElementById('generatedImage');
+        const imageUrlDiv = document.getElementById('imageUrl');
+
+        try {
+          if (!response.ok) {
+            const errorData = await response.json();
+            responseDiv.innerHTML = `<pre>${JSON.stringify(errorData, null, 2)}</pre>`;
+            generatedImage.style.display = 'none';
+            imageUrlDiv.style.display = 'none';
+            return;
+          }
+
+          const data = await response.json();
+          responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+          if (data.url) {
+            const fullUrl = window.location.origin + data.url;
+            generatedImage.src = fullUrl;
+            generatedImage.style.display = 'block';
+            imageUrlDiv.textContent = fullUrl;
+            imageUrlDiv.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Error handling response:', error);
+          responseDiv.innerHTML = `Error: ${error.message}`;
+          generatedImage.style.display = 'none';
+          imageUrlDiv.style.display = 'none';
         }
+      }
 
-        async function handleResponse(response) {
-            const responseDiv = document.getElementById('response');
-            const generatedImage = document.getElementById('generatedImage');
-            
-            try {
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    responseDiv.innerHTML = `<pre>${JSON.stringify(errorData, null, 2)}</pre>`;
-                    generatedImage.style.display = 'none';
-                    return;
-                }
+      async function generateImage() {
+        try {
+          let templateData;
+          try {
+            templateData = JSON.parse(templateDataEditor.getValue().trim());
+            console.log('Parsed template data:', templateData); // Debug-Log
+          } catch (error) {
+            console.error('Error parsing template data:', error);
+            document.getElementById('response').innerHTML =
+              `Error parsing template data: ${error.message}`;
+            return;
+          }
 
-                if (response.headers.get('content-type').includes('image')) {
-                    const blob = await response.blob();
-                    const imageUrl = URL.createObjectURL(blob);
-                    generatedImage.src = imageUrl;
-                    generatedImage.style.display = 'block';
-                    responseDiv.innerHTML = 'Image generated successfully!';
-                } else {
-                    const data = await response.json();
-                    responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-                    
-                    if (data.url) {
-                        const imageResponse = await fetch(API_BASE_URL + data.url, {
-                            headers: getAuthHeaders()
-                        });
-                        const blob = await imageResponse.blob();
-                        const imageUrl = URL.createObjectURL(blob);
-                        generatedImage.src = imageUrl;
-                        generatedImage.style.display = 'block';
-                    }
-                }
-            } catch (error) {
-                responseDiv.innerHTML = `Error: ${error.message}`;
-                generatedImage.style.display = 'none';
-            }
+          const payload = {
+            html: htmlEditor.getValue().trim(),
+            css: cssEditor.getValue().trim(),
+            template_data: templateData, // Änderung hier: template_data statt templateData
+            google_fonts: document.getElementById('googleFonts').value,
+            viewport_width: parseInt(document.getElementById('viewportWidth').value) || undefined,
+            viewport_height: parseInt(document.getElementById('viewportHeight').value) || undefined,
+            device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
+          };
+
+          console.log('Sending payload:', JSON.stringify(payload, null, 2)); // Debug-Log
+
+          const response = await fetch(`${API_BASE_URL}/image`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+          });
+
+          await handleResponse(response);
+        } catch (error) {
+          document.getElementById('response').innerHTML = `Error: ${error.message}`;
         }
+      }
 
-        async function generateImage() {
-            const settings = getSettings();
-            const payload = {
-                html: htmlEditor.getValue(),
-                css: cssEditor.getValue(),
-                ...settings
-            };
+      async function createTemplate() {
+        try {
+          const payload = {
+            html: htmlEditor.getValue(),
+            css: cssEditor.getValue(),
+            name: 'Test Template',
+            description: 'Created from API Tester',
+            ...getSettings(),
+          };
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/image`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
+          const response = await fetch(`${API_BASE_URL}/template`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+          });
 
-                await handleResponse(response);
-            } catch (error) {
-                document.getElementById('response').innerHTML = `Error: ${error.message}`;
-            }
+          await handleResponse(response);
+        } catch (error) {
+          document.getElementById('response').innerHTML = `Error: ${error.message}`;
         }
+      }
 
-        async function createTemplate() {
-            const settings = getSettings();
-            const payload = {
-                html: htmlEditor.getValue(),
-                css: cssEditor.getValue(),
-                name: 'Test Template',
-                description: 'Created from API Tester',
-                ...settings
-            };
+      async function listTemplates() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/template`, {
+            headers: getAuthHeaders(),
+          });
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/template`, {
-                    method: 'POST',
-                    headers: {
-                        ...getAuthHeaders(),
-                        'x-user-id': 'test-user',
-                        'x-user-plan': 'FREE'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                await handleResponse(response);
-            } catch (error) {
-                document.getElementById('response').innerHTML = `Error: ${error.message}`;
-            }
+          await handleResponse(response);
+        } catch (error) {
+          document.getElementById('response').innerHTML = `Error: ${error.message}`;
         }
-
-        async function listTemplates() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/template`, {
-                    headers: {
-                        ...getAuthHeaders(),
-                        'x-user-id': 'test-user'
-                    }
-                });
-
-                await handleResponse(response);
-            } catch (error) {
-                document.getElementById('response').innerHTML = `Error: ${error.message}`;
-            }
-        }
+      }
     </script>
-</body>
+  </body>
 </html>
