@@ -1,3 +1,4 @@
+# .github/workflows/initial-setup.yml
 name: Initial Server Setup
 
 on:
@@ -12,7 +13,7 @@ jobs:
   initial-setup:
     runs-on: ubuntu-latest
     if: github.event.inputs.server_setup == 'true'
-    timeout-minutes: 15 # Erhöhtes Timeout
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +58,10 @@ jobs:
             # NPM Installation mit erhöhtem Timeout
             npm config set script-timeout 600000
             npm install --production --no-fund --no-audit
+
+            # Initialize database and run migrations
+            echo "Initializing database and running migrations..."
+            npm run db:migrate
             WWWDATA
 
             # PM2 Setup

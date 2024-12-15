@@ -3,21 +3,31 @@ const request = require('supertest');
 const { app, setDb } = require('../src/server');
 const { open } = require('sqlite');
 const sqlite3 = require('sqlite3');
+const bcrypt = require('bcrypt');
 
 describe('Image Generation API', () => {
   let testDb;
-  const auth = {
-    username: process.env.API_USER || 'test',
-    password: process.env.API_KEY || 'test'
-  };
+  let testUser;
 
   beforeAll(async () => {
+    // Setup in-memory test database
     testDb = await open({
       filename: ':memory:',
       driver: sqlite3.Database,
     });
 
+    // Create required tables
     await testDb.exec(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE,
+        password_hash TEXT,
+        api_key TEXT UNIQUE,
+        plan TEXT DEFAULT 'FREE',
+        created_at TEXT,
+        updated_at TEXT
+      );
+
       CREATE TABLE IF NOT EXISTS templates (
         id TEXT PRIMARY KEY,
         version INTEGER,
@@ -32,9 +42,37 @@ describe('Image Generation API', () => {
         created_at TEXT,
         updated_at TEXT,
         user_id TEXT,
-        plan TEXT DEFAULT 'FREE'
+        plan TEXT DEFAULT 'FREE',
+        example_data TEXT,
+        template_data TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id)
       );
     `);
+
+    // Create test user
+    testUser = {
+      id: 'test-user',
+      email: 'test@example.com',
+      password: 'test-password',
+      api_key: 'test-api-key',
+    };
+
+    const passwordHash = await bcrypt.hash(testUser.password, 10);
+    await testDb.run(
+      `
+      INSERT INTO users (id, email, password_hash, api_key, plan, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+      [
+        testUser.id,
+        testUser.email,
+        passwordHash,
+        testUser.api_key,
+        'FREE',
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ]
+    );
 
     setDb(testDb);
   });
@@ -53,11 +91,9 @@ describe('Image Generation API', () => {
 
   describe('Authentication', () => {
     test('should reject requests without authentication', async () => {
-      const response = await request(app)
-        .post('/v1/image')
-        .send({
-          html: '<div>Test</div>'
-        });
+      const response = await request(app).post('/v1/image').send({
+        html: '<div>Test</div>',
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error', 'Unauthorized');
@@ -66,9 +102,9 @@ describe('Image Generation API', () => {
     test('should reject requests with invalid credentials', async () => {
       const response = await request(app)
         .post('/v1/image')
-        .auth('wrong', 'credentials')
+        .auth('wrong@example.com', 'wrong-key')
         .send({
-          html: '<div>Test</div>'
+          html: '<div>Test</div>',
         });
 
       expect(response.status).toBe(401);
@@ -78,9 +114,9 @@ describe('Image Generation API', () => {
     test('should accept requests with valid credentials', async () => {
       const response = await request(app)
         .post('/v1/image')
-        .auth(auth.username, auth.password)
+        .auth(testUser.email, testUser.api_key)
         .send({
-          html: '<div>Test</div>'
+          html: '<div>Test</div>',
         });
 
       expect(response.status).toBe(201);
@@ -92,7 +128,7 @@ describe('Image Generation API', () => {
     test('POST /v1/image requires HTML', async () => {
       const response = await request(app)
         .post('/v1/image')
-        .auth(auth.username, auth.password)
+        .auth(testUser.email, testUser.api_key)
         .send({});
 
       expect(response.status).toBe(400);
@@ -102,70 +138,68 @@ describe('Image Generation API', () => {
     test('POST /v1/image generates image successfully', async () => {
       const response = await request(app)
         .post('/v1/image')
-        .auth(auth.username, auth.password)
+        .auth(testUser.email, testUser.api_key)
         .send({
           html: '<div>Test Image</div>',
           css: 'div { color: blue; }',
+          template_data: {
+            message: 'Test Message',
+          },
         });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('url');
-      expect(response.body.url).toMatch(/^\/v1\/image\/img-/);
+      expect(response.body.url).toMatch(/^\/uploads\/img-/);
     });
   });
 
   describe('Template-based Image Generation', () => {
     let templateId;
+    const templateData = {
+      message: 'Hello from template!',
+    };
 
     beforeEach(async () => {
-      // Template direkt in der Datenbank erstellen
+      // Create a test template directly in the database
       templateId = `t-${Date.now()}-${Math.random().toString(36).substring(2)}`;
-      const now = new Date().toISOString();
-
-      await testDb.run(`
+      await testDb.run(
+        `
         INSERT INTO templates (
-          id, version, html, css, name, description, created_at, updated_at, user_id, plan
+          id, version, html, css, name, description, user_id, 
+          created_at, updated_at, template_data
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        templateId,
-        Date.now(),
-        '<div>{{message}}</div>',
-        'div { color: red; }',
-        'Test Template',
-        'Test Description',
-        now,
-        now,
-        'test-user',
-        'FREE'
-      ]);
-
-      // Verifiziere, dass das Template erstellt wurde
-      const template = await testDb.get('SELECT * FROM templates WHERE id = ?', templateId);
-      if (!template) {
-        throw new Error('Template was not created successfully');
-      }
+      `,
+        [
+          templateId,
+          Date.now(),
+          '<div>{{message}}</div>',
+          'div { color: red; }',
+          'Test Template',
+          'Test Description',
+          testUser.id,
+          new Date().toISOString(),
+          new Date().toISOString(),
+          JSON.stringify(templateData),
+        ]
+      );
     });
 
     test('POST /v1/image/from-template/:templateId generates image from template', async () => {
       const response = await request(app)
         .post(`/v1/image/from-template/${templateId}`)
-        .auth(auth.username, auth.password)
-        .send({
-          message: 'Hello from template!'
-        });
+        .auth(testUser.email, testUser.api_key)
+        .send(templateData);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('url');
-      expect(response.body.url).toMatch(/^\/v1\/image\/img-/);
+      expect(response.body.url).toMatch(/^\/uploads\//);
     });
 
     test('POST /v1/image/from-template/:templateId returns 404 for non-existent template', async () => {
       const response = await request(app)
         .post('/v1/image/from-template/non-existent')
-        .auth(auth.username, auth.password)
-        .send({
-          message: 'Hello'
-        });
+        .auth(testUser.email, testUser.api_key)
+        .send(templateData);
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('message', 'Template not found');
@@ -173,23 +207,26 @@ describe('Image Generation API', () => {
   });
 
   describe('Image Operations', () => {
-    let imageUrl;
+    let imageId;
+    let baseUrl;
 
     beforeEach(async () => {
       const response = await request(app)
         .post('/v1/image')
-        .auth(auth.username, auth.password)
+        .auth(testUser.email, testUser.api_key)
         .send({
-          html: '<div>Test Image</div>'
+          html: '<div>Test Image</div>',
         });
 
-      imageUrl = response.body.url;
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('url');
+      // Extrahiere die ID aus der URL
+      imageId = response.body.url.split('/').pop().replace('.png', '');
+      baseUrl = `/v1/image/${imageId}`;
     });
 
     test('GET /v1/image/:imageId retrieves image', async () => {
-      const response = await request(app)
-        .get(imageUrl)
-        .auth(auth.username, auth.password);
+      const response = await request(app).get(baseUrl).auth(testUser.email, testUser.api_key);
 
       expect(response.status).toBe(200);
       expect(response.type).toBe('image/png');
@@ -197,33 +234,33 @@ describe('Image Generation API', () => {
 
     test('GET /v1/image/:imageId with format parameter', async () => {
       const response = await request(app)
-        .get(`${imageUrl}?format=jpg`)
-        .auth(auth.username, auth.password);
+        .get(`${baseUrl}?format=jpg`)
+        .auth(testUser.email, testUser.api_key);
 
       expect(response.status).toBe(200);
-      expect(response.type).toBe('image/jpeg');
+      expect(response.get('Content-Type')).toBe('image/jpeg');
     });
 
     test('GET /v1/image/:imageId with download flag', async () => {
       const response = await request(app)
-        .get(`${imageUrl}?dl=1`)
-        .auth(auth.username, auth.password);
+        .get(`${baseUrl}?dl=1`)
+        .auth(testUser.email, testUser.api_key);
 
       expect(response.status).toBe(200);
-      expect(response.header['content-disposition']).toContain('attachment');
+      expect(response.get('Content-Disposition')).toContain('attachment');
     });
 
     test('DELETE /v1/image/:imageId removes image', async () => {
-      const imageId = imageUrl.split('/').pop();
-      
+      // Erst löschen
       const deleteResponse = await request(app)
-        .delete(`/v1/image/${imageId}`)
-        .auth(auth.username, auth.password);
+        .delete(baseUrl)
+        .auth(testUser.email, testUser.api_key);
+
       expect(deleteResponse.status).toBe(202);
 
-      const getResponse = await request(app)
-        .get(imageUrl)
-        .auth(auth.username, auth.password);
+      // Dann versuchen das Bild abzurufen
+      const getResponse = await request(app).get(baseUrl).auth(testUser.email, testUser.api_key);
+
       expect(getResponse.status).toBe(404);
     });
   });

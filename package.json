@@ -30,6 +30,7 @@
     "helmet": "^8.0.0",
     "node-html-to-image": "^5.0.0",
     "puppeteer": "^23.10.4",
+    "sharp": "^0.33.5",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.6"
   },

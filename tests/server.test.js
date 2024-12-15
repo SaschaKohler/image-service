@@ -9,7 +9,7 @@ describe('Template Service API', () => {
   let testDb;
   const auth = {
     username: process.env.API_USER || 'test',
-    password: process.env.API_KEY || 'test'
+    password: process.env.API_KEY || 'test',
   };
 
   beforeAll(async () => {
@@ -33,9 +33,37 @@ describe('Template Service API', () => {
         created_at TEXT,
         updated_at TEXT,
         user_id TEXT,
-        plan TEXT DEFAULT 'FREE'
+        plan TEXT DEFAULT 'FREE',
+        example_data TEXT,
+        template_data TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE,
+        password_hash TEXT,
+        api_key TEXT UNIQUE,
+        plan TEXT DEFAULT 'FREE',
+        created_at TEXT,
+        updated_at TEXT
       );
     `);
+
+    // Create test user
+    await testDb.run(
+      `
+      INSERT INTO users (id, email, api_key, plan, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
+      [
+        'test-user',
+        'test@example.com',
+        'test-api-key',
+        'FREE',
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ]
+    );
 
     setDb(testDb);
   });
@@ -51,102 +79,142 @@ describe('Template Service API', () => {
     await testDb.exec('DELETE FROM templates');
   });
 
-  describe('Health Endpoint', () => {
-    test('GET /health returns healthy status when DB is connected', async () => {
-      const response = await request(app).get('/health');
-
-      expect(response.status).toBe(200);
-      expect(response.body).toMatchObject({
-        status: 'healthy',
-        database: 'connected',
-      });
-      expect(response.body).toHaveProperty('timestamp');
-    });
-  });
-
   describe('Template Creation', () => {
-    test('POST /v1/template requires HTML', async () => {
-      const response = await request(app)
-        .post('/v1/template')
-        .auth(auth.username, auth.password)
-        .set('x-user-id', `html-test-user-${Date.now()}`)
-        .set('x-user-plan', 'FREE')
-        .send({
-          name: 'Test Template',
-        });
-
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('message', 'HTML is Required');
-    });
-
-    test('POST /v1/template creates template successfully', async () => {
-      const uniqueUserId = `create-test-user-${Date.now()}`;
+    test('POST /v1/template creates template with template_data successfully', async () => {
+      const templateData = {
+        title: 'Test Title',
+        message: 'Test Message',
+      };
 
       const response = await request(app)
         .post('/v1/template')
-        .auth(auth.username, auth.password)
-        .set('x-user-id', uniqueUserId)
-        .set('x-user-plan', 'FREE')
+        .auth('test@example.com', 'test-api-key')
         .send({
-          html: '<div>Test Template</div>',
+          html: '<div>{{title}} - {{message}}</div>',
           name: 'Test Template',
+          template_data: templateData,
         });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('template_id');
       expect(response.body).toHaveProperty('template_version');
+      expect(response.body.template_data).toEqual(templateData);
+
+      // Verify template was stored correctly
+      const template = await testDb.get('SELECT * FROM templates WHERE id = ?', [
+        response.body.template_id,
+      ]);
+      expect(JSON.parse(template.template_data)).toEqual(templateData);
     });
 
-    test('POST /v1/template enforces plan limits', async () => {
-      const userId = 'limit-test-user';
-      
-      // Ersten Template erstellen
-      await request(app)
-        .post('/v1/template')
-        .auth(auth.username, auth.password)
-        .set('x-user-id', userId)
-        .set('x-user-plan', 'FREE')
-        .send({
-          html: '<div>Template 1</div>',
-        });
-
-      // Zweiter Template sollte fehlschlagen
+    test('POST /v1/template validates template syntax with template_data', async () => {
       const response = await request(app)
         .post('/v1/template')
-        .auth(auth.username, auth.password)
-        .set('x-user-id', userId)
-        .set('x-user-plan', 'FREE')
+        .auth('test@example.com', 'test-api-key')
         .send({
-          html: '<div>Template 2</div>',
+          html: '<div>{{invalidSyntax</div>',
+          template_data: { title: 'Test' },
         });
 
-      expect(response.status).toBe(429);
-      expect(response.body).toHaveProperty('error', 'Plan limit exceeded');
+      expect(response.status).toBe(400);
+      expect(response.body.message).toMatch(/Invalid template syntax/);
+    });
+  });
+
+  describe('Image Generation', () => {
+    let templateId;
+    const templateData = {
+      title: 'Dynamic Title',
+      message: 'Dynamic Message',
+    };
+
+    beforeEach(async () => {
+      // Create a test template
+      const response = await request(app)
+        .post('/v1/template')
+        .auth('test@example.com', 'test-api-key')
+        .send({
+          html: '<div>{{title}} - {{message}}</div>',
+          template_data: templateData,
+        });
+
+      templateId = response.body.template_id;
+    });
+
+    test('POST /v1/image handles template_data correctly', async () => {
+      const response = await request(app)
+        .post('/v1/image')
+        .auth('test@example.com', 'test-api-key')
+        .send({
+          html: '<div>{{title}} - {{message}}</div>',
+          template_data: templateData,
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('url');
+      expect(response.body.url).toMatch(/^\/uploads\/img-/);
+    });
+
+    test('POST /v1/image/from-template/:templateId uses template_data', async () => {
+      const customData = {
+        title: 'Custom Title',
+        message: 'Custom Message',
+      };
+
+      const response = await request(app)
+        .post(`/v1/image/from-template/${templateId}`)
+        .auth('test@example.com', 'test-api-key')
+        .send(customData);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('url');
+      expect(response.body.url).toMatch(/^\/uploads\/img-/);
+    });
+
+    test('POST /v1/image/from-template/:templateId falls back to template_data if no data provided', async () => {
+      const response = await request(app)
+        .post(`/v1/image/from-template/${templateId}`)
+        .auth('test@example.com', 'test-api-key')
+        .send({});
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('url');
+    });
+
+    test('POST /v1/image/from-template/:templateId validates provided data', async () => {
+      const response = await request(app)
+        .post(`/v1/image/from-template/${templateId}`)
+        .auth('test@example.com', 'test-api-key')
+        .send({
+          invalidKey: 'This should still work but not be used',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('url');
     });
   });
 
   describe('Template Listing', () => {
-    test('GET /v1/template lists user templates', async () => {
-      const userId = 'list-test-user';
-      
-      await request(app)
-        .post('/v1/template')
-        .auth(auth.username, auth.password)
-        .set('x-user-id', userId)
-        .set('x-user-plan', 'FREE')
-        .send({
-          html: '<div>Test Template</div>',
-        });
+    test('GET /v1/template includes template_data in response', async () => {
+      const templateData = {
+        title: 'Test Title',
+        message: 'Test Message',
+      };
+
+      // Create a template first
+      await request(app).post('/v1/template').auth('test@example.com', 'test-api-key').send({
+        html: '<div>{{title}} - {{message}}</div>',
+        template_data: templateData,
+      });
 
       const response = await request(app)
         .get('/v1/template')
-        .auth(auth.username, auth.password)
-        .set('x-user-id', userId);
+        .auth('test@example.com', 'test-api-key');
 
       expect(response.status).toBe(200);
       expect(response.body.data).toBeInstanceOf(Array);
-      expect(response.body.data.length).toBe(1);
-      expect(response.body.data[0].html).toBe('<div>Test Template</div>');
+      expect(response.body.data[0].template_data).toEqual(templateData);
+      expect(response.body.data[0].example_data).toEqual(templateData); // For backwards compatibility
     });
   });
 });

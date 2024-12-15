@@ -9,7 +9,7 @@ const authMiddleware = require('./middleware/auth');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const authRoutes = require('./routes/auth');
-
+const sharp = require('sharp');
 const app = express();
 
 // Basic Middleware
@@ -190,13 +190,14 @@ app.get('/health', async (_, res) => {
       }
     });
 
-    // Bild aus Template generieren
+    // Korrektur im server.js für die Template-Image-Route
     app.post('/v1/image/from-template/:templateId', async (req, res) => {
       try {
         const { templateId } = req.params;
         const templateData = req.body; // Die Variablen für das Template
         const userId = req.user.id;
 
+        // Template aus DB holen mit user_id Check
         const template = await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [
           templateId,
           userId,
@@ -210,17 +211,14 @@ app.get('/health', async (_, res) => {
           });
         }
 
-        // Validiere Template-Daten
-        try {
-          const compiledTemplate = Handlebars.compile(template.html);
-          compiledTemplate(templateData);
-        } catch (error) {
-          return res.status(400).json({
-            error: 'Bad Request',
-            statusCode: 400,
-            message: `Invalid template data: ${error.message}`,
-          });
-        }
+        // Hole gespeicherte template_data als Fallback
+        const storedTemplateData = template.template_data ? JSON.parse(template.template_data) : {};
+
+        // Kombiniere übergebene Daten mit gespeicherten Daten, wobei übergebene Priorität haben
+        const mergedTemplateData = {
+          ...storedTemplateData,
+          ...templateData,
+        };
 
         const image = await generateImage({
           html: template.html,
@@ -229,7 +227,7 @@ app.get('/health', async (_, res) => {
           viewportWidth: template.viewport_width,
           viewportHeight: template.viewport_height,
           deviceScale: template.device_scale,
-          templateData,
+          template_data: mergedTemplateData,
         });
 
         const imageId = `img-${Date.now()}-${Math.random().toString(36).substring(2)}`;
@@ -253,7 +251,6 @@ app.get('/health', async (_, res) => {
         });
       }
     });
-
     // Template-Liste mit Beispieldaten
     app.get('/v1/template', async (req, res) => {
       try {
@@ -343,40 +340,69 @@ app.get('/health', async (_, res) => {
       }
     });
 
+    // Überarbeitete GET-Route für Images
     app.get('/v1/image/:imageId', async (req, res) => {
       try {
         const { imageId } = req.params;
         const format = req.query.format || 'png';
+        const download = req.query.dl === '1';
 
+        // Versuche zuerst das Bild aus dem Memory-Store zu holen
         let image = global.imageStore?.get(imageId);
 
+        // Falls nicht im Memory, versuche von der Festplatte
         if (!image) {
           const imagePath = path.join(CONFIG.UPLOAD_DIR, `${imageId}.png`);
           try {
             image = await fsPromises.readFile(imagePath);
+            // Cache das Bild im Memory-Store
             if (!global.imageStore) global.imageStore = new Map();
             global.imageStore.set(imageId, image);
           } catch (err) {
-            return res.status(404).json({
-              error: 'Not Found',
-              statusCode: 404,
-              message: 'Image not found',
-            });
+            if (err.code === 'ENOENT') {
+              return res.status(404).json({
+                error: 'Not Found',
+                statusCode: 404,
+                message: 'Image not found',
+              });
+            }
+            throw err;
           }
         }
 
+        // Konvertiere das Bild in das gewünschte Format
+        let processedImage = sharp(image);
+        switch (format.toLowerCase()) {
+          case 'jpg':
+          case 'jpeg':
+            processedImage = processedImage.jpeg();
+            break;
+          case 'webp':
+            processedImage = processedImage.webp();
+            break;
+          default:
+            processedImage = processedImage.png();
+        }
+
+        const outputBuffer = await processedImage.toBuffer();
+
+        // Setze die korrekten Header
         const contentTypes = {
           png: 'image/png',
           jpg: 'image/jpeg',
+          jpeg: 'image/jpeg',
           webp: 'image/webp',
         };
-        res.setHeader('Content-Type', contentTypes[format] || contentTypes.png);
+        res.setHeader('Content-Type', contentTypes[format.toLowerCase()] || contentTypes.png);
 
-        if (req.query.dl === '1') {
-          res.setHeader('Content-Disposition', `attachment; filename="image.${format}"`);
+        if (download) {
+          res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="image.${format.toLowerCase()}"`
+          );
         }
 
-        res.send(image);
+        res.send(outputBuffer);
       } catch (error) {
         console.error('Image retrieval failed:', error);
         res.status(500).json({
@@ -386,24 +412,28 @@ app.get('/health', async (_, res) => {
         });
       }
     });
-
+    // Überarbeitete DELETE-Route
     app.delete('/v1/image/:imageId', async (req, res) => {
       try {
         const { imageId } = req.params;
         const imagePath = path.join(CONFIG.UPLOAD_DIR, `${imageId}.png`);
 
+        // Lösche aus dem Memory-Store
         if (global.imageStore) {
           global.imageStore.delete(imageId);
         }
 
         try {
-          await fs.unlink(imagePath);
+          // Lösche von der Festplatte
+          await fsPromises.unlink(imagePath);
         } catch (err) {
+          // Ignoriere ENOENT (Datei existiert nicht), aber wirf andere Fehler
           if (err.code !== 'ENOENT') {
             throw err;
           }
         }
 
+        // Immer 202 zurückgeben, da die Löschung als erfolgreich gilt
         res.status(202).send();
       } catch (error) {
         console.error('Image deletion failed:', error);
@@ -414,7 +444,6 @@ app.get('/health', async (_, res) => {
         });
       }
     });
-
     // 6. Server starten
     const PORT = process.env.NODE_ENV === 'test' ? 3001 : 3000;
     const server = app.listen(PORT, () => {

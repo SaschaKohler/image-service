@@ -1,3 +1,4 @@
+# .github/workflows/deploy.yml
 name: Regular Deployment
 
 on:
@@ -26,7 +27,7 @@ jobs:
               exit 1
             fi
 
-      - name: Deploy Updates
+      - name: Deploy Updates and Run Migrations
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -35,16 +36,24 @@ jobs:
           script: |
             cd /opt/image-service
 
+            # Backup database before any changes
+            timestamp=$(date +%Y%m%d_%H%M%S)
+            sudo -u www-data cp src/templates.db "src/templates.db.backup_${timestamp}"
+
             # Pull latest changes
             sudo -u www-data git pull origin main
 
-            # Install only if package.json changed
+            # Install dependencies if package.json changed
             if git diff --quiet HEAD@{1} HEAD -- package.json; then
               echo "No changes in package.json, skipping npm install"
             else
               echo "Changes detected in package.json, running npm install"
               sudo -u www-data npm install --production
             fi
+
+            # Run database migrations
+            echo "Running database migrations..."
+            sudo -u www-data npm run db:migrate
 
             # Gracefully reload the service
             sudo -u www-data PM2_HOME=/var/www/.pm2 pm2 reload image-service
