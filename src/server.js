@@ -6,6 +6,7 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const generateImage = require('./imageGenerator');
 const authMiddleware = require('./middleware/auth');
+const templateProcessing = require('./middleware/templateProcessing');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const authRoutes = require('./routes/auth');
@@ -16,6 +17,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(templateProcessing);
 
 // Konfiguration
 const CONFIG = {
