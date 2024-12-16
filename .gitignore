@@ -8,3 +8,4 @@ coverage/
 .DS_Store
 *.db
 uploads/**/*.png
+src/templates.db
