@@ -1,197 +1,288 @@
-<!-- src/public/auth.html -->
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML to Image Service - Login/Register</title>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        background: #f5f5f5;
-      }
-      .container {
-        display: flex;
-        gap: 40px;
-        margin-top: 40px;
-      }
-      .auth-form {
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        flex: 1;
-      }
-      h1,
-      h2 {
-        margin-top: 0;
-        color: #333;
-      }
-      .form-group {
-        margin-bottom: 20px;
-      }
-      label {
-        display: block;
-        margin-bottom: 5px;
-        color: #555;
-      }
-      input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 16px;
-      }
-      button {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        width: 100%;
-      }
-      button:hover {
-        background: #0056b3;
-      }
-      .error {
-        color: #dc3545;
-        margin-top: 5px;
-        font-size: 14px;
-      }
-      .success {
-        color: #28a745;
-        margin-top: 15px;
-        padding: 15px;
-        border-radius: 4px;
-        background: #f8fff9;
-        border: 1px solid #d4edda;
-      }
-      .api-key {
-        background: #f8f9fa;
-        padding: 10px;
-        border-radius: 4px;
-        margin: 10px 0;
-        font-family: monospace;
-        word-break: break-all;
-      }
-    </style>
+    <title>Login | HTML to Image Service</title>
+    <link href="/css/output.css" rel="stylesheet" />
   </head>
-  <body>
-    <h1>HTML to Image Service</h1>
-
-    <div class="container">
-      <div class="auth-form">
-        <h2>Login</h2>
-        <form id="loginForm" onsubmit="handleLogin(event)">
-          <div class="form-group">
-            <label for="loginEmail">Email:</label>
-            <input type="email" id="loginEmail" required />
+  <body class="h-full">
+    <div class="min-h-full flex">
+      <!-- Left Side - Background -->
+      <div class="hidden lg:flex lg:w-1/2 relative bg-blue-600">
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-700"></div>
+        <div class="relative w-full flex flex-col items-center justify-center px-12">
+          <div class="w-full max-w-md">
+            <div class="text-white">
+              <svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <h2 class="mt-6 text-3xl font-bold">HTML to Image Service</h2>
+              <p class="mt-4 text-lg">
+                Verwandeln Sie Ihre HTML-Vorlagen in beeindruckende Bilder mit unserem
+                leistungsstarken Konvertierungsdienst.
+              </p>
+            </div>
+            <div class="mt-12 space-y-6">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-6 w-6 text-blue-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <p class="ml-3 text-white">Einfache API-Integration</p>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-6 w-6 text-blue-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <p class="ml-3 text-white">Anpassbare Vorlagen</p>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-6 w-6 text-blue-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <p class="ml-3 text-white">Verschiedene Exportformate</p>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="loginPassword">Password:</label>
-            <input type="password" id="loginPassword" required />
-          </div>
-          <button type="submit" id="loginButton">Login</button>
-          <div id="loginMessage"></div>
-        </form>
+        </div>
       </div>
 
-      <div class="auth-form">
-        <h2>Register</h2>
-        <form id="registerForm" onsubmit="handleRegister(event)">
-          <div class="form-group">
-            <label for="registerEmail">Email:</label>
-            <input type="email" id="registerEmail" required />
+      <!-- Right Side - Auth Forms -->
+      <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
+        <div class="mx-auto w-full max-w-sm">
+          <!-- Tabs -->
+          <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+              <button
+                onclick="switchTab('login')"
+                class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600"
+                id="login-tab"
+              >
+                Anmelden
+              </button>
+              <button
+                onclick="switchTab('register')"
+                class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                id="register-tab"
+              >
+                Registrieren
+              </button>
+            </nav>
           </div>
-          <div class="form-group">
-            <label for="registerPassword">Password:</label>
-            <input type="password" id="registerPassword" required minlength="8" />
+
+          <!-- Login Form -->
+          <div id="login-form" class="mt-8 space-y-6">
+            <div>
+              <label for="loginEmail" class="block text-sm font-medium text-gray-700">
+                E-Mail-Adresse
+              </label>
+              <div class="mt-1">
+                <input
+                  id="loginEmail"
+                  type="email"
+                  required
+                  class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="loginPassword" class="block text-sm font-medium text-gray-700">
+                Passwort
+              </label>
+              <div class="mt-1">
+                <input
+                  id="loginPassword"
+                  type="password"
+                  required
+                  class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                onclick="handleLogin(event)"
+                class="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                Anmelden
+              </button>
+            </div>
+            <div id="loginMessage" class="text-sm"></div>
           </div>
-          <div class="form-group">
-            <label for="plan">Plan:</label>
-            <select id="plan" required>
-              <option value="FREE">Free</option>
-              <option value="BASIC">Basic</option>
-              <option value="PRO">Pro</option>
-            </select>
+
+          <!-- Register Form -->
+          <div id="register-form" class="mt-8 space-y-6 hidden">
+            <div>
+              <label for="registerEmail" class="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div class="mt-1">
+                <input
+                  id="registerEmail"
+                  type="email"
+                  required
+                  class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="registerPassword" class="block text-sm font-medium text-gray-700">
+                Passwort
+              </label>
+              <div class="mt-1">
+                <input
+                  id="registerPassword"
+                  type="password"
+                  required
+                  minlength="8"
+                  class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+              <p class="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+            </div>
+
+            <div>
+              <label for="plan" class="block text-sm font-medium text-gray-700"> Tarif</label>
+              <div class="mt-1">
+                <select
+                  id="plan"
+                  class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                >
+                  <option value="FREE">Kostenlos - 50 Bilder/Monat</option>
+                  <option value="BASIC">Basic - 500 Bilder/Monat</option>
+                  <option value="PRO">Pro - 1000 Bilder/Monat</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <button
+                onclick="handleRegister(event)"
+                class="flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              >
+                Konto erstellen
+              </button>
+            </div>
+            <div id="registerMessage" class="text-sm"></div>
           </div>
-          <button type="submit" id="registerButton">Register</button>
-          <div id="registerMessage"></div>
-        </form>
+        </div>
       </div>
     </div>
 
     <script>
-      function showError(elementId, error) {
-        if (!elementId) return; // Früher Return wenn kein elementId
-
-        const element = document.getElementById(elementId);
-        const detailsElement = document.getElementById(elementId + 'Details');
-        const inputId = elementId.replace('Error', '');
-        const inputElement = document.getElementById(inputId);
-
-        // Prüfe ob die Elemente existieren
-        if (!element) return;
-
-        if (error) {
-          element.textContent = error.message || error;
-          if (detailsElement && error.details) {
-            detailsElement.textContent = error.details;
-            detailsElement.style.display = 'block';
-          }
-          if (inputElement) {
-            inputElement.classList.add('error');
-          }
-        } else {
-          element.textContent = '';
-          if (detailsElement) {
-            detailsElement.style.display = 'none';
-          }
-          if (inputElement) {
-            inputElement.classList.remove('error');
-          }
+      function getRedirectUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+        switch (redirect) {
+          case 'test':
+            return '/test.html';
+          case 'gallery':
+            return '/gallery.html';
+          default:
+            return '/';
         }
       }
 
-      function clearErrors() {
-        const errorFields = [
-          'registerEmail',
-          'registerPassword',
-          'plan',
-          'loginEmail',
-          'loginPassword',
-        ];
-
-        errorFields.forEach(field => {
-          // Hole die Elemente
-          const errorElement = document.getElementById(`${field}Error`);
-          const detailsElement = document.getElementById(`${field}Details`);
-          const inputElement = document.getElementById(field);
-
-          // Setze Fehler zurück wenn Elemente existieren
-          if (errorElement) {
-            errorElement.textContent = '';
-          }
-          if (detailsElement) {
-            detailsElement.style.display = 'none';
-          }
-          if (inputElement) {
-            inputElement.classList.remove('error');
-          }
+      function switchTab(tab) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.remove('border-blue-500', 'text-blue-600');
+          btn.classList.add('border-transparent', 'text-gray-500');
         });
+        document
+          .getElementById(`${tab}-tab`)
+          .classList.remove('border-transparent', 'text-gray-500');
+        document.getElementById(`${tab}-tab`).classList.add('border-blue-500', 'text-blue-600');
+
+        // Show/hide forms
+        document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+        document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+
+        // Clear messages
+        document.getElementById('loginMessage').textContent = '';
+        document.getElementById('registerMessage').textContent = '';
       }
+
+      async function handleLogin(event) {
+        event.preventDefault();
+        const messageDiv = document.getElementById('loginMessage');
+
+        try {
+          const response = await fetch('/v1/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: document.getElementById('loginEmail').value,
+              password: document.getElementById('loginPassword').value,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            messageDiv.className = 'text-sm text-green-600';
+            messageDiv.textContent = 'Login successful! Redirecting...';
+            localStorage.setItem('userEmail', data.email);
+            localStorage.setItem('apiKey', data.api_key);
+            window.location.href = getRedirectUrl();
+          } else {
+            messageDiv.className = 'text-sm text-red-600';
+            messageDiv.textContent = data.message || 'Login failed';
+          }
+        } catch (error) {
+          messageDiv.className = 'text-sm text-red-600';
+          messageDiv.textContent = 'An error occurred. Please try again.';
+        }
+      }
+
       async function handleRegister(event) {
         event.preventDefault();
-        clearErrors();
-
-        const button = document.getElementById('registerButton');
         const messageDiv = document.getElementById('registerMessage');
-        button.disabled = true;
 
         try {
           const response = await fetch('/v1/auth/register', {
@@ -209,85 +300,24 @@
           const data = await response.json();
 
           if (response.ok) {
-            messageDiv.className = 'success';
-            messageDiv.innerHTML = `
-                        Registration successful!<br>
-                        Your API Key: <div class="api-key">${data.api_key}</div>
-                        <a href="/test.html">Go to API Tester</a>
-                    `;
+            messageDiv.className = 'text-sm text-green-600';
+            messageDiv.textContent = 'Registration successful! Redirecting...';
             localStorage.setItem('userEmail', data.email);
             localStorage.setItem('apiKey', data.api_key);
+            window.location.href = getRedirectUrl();
           } else {
-            // Zeige feldspezifische Fehler
-            if (data.field) {
-              showError(`${data.field}Error`, data);
-            } else {
-              messageDiv.className = 'error-message';
-              messageDiv.innerHTML = `
-                            ${data.message}<br>
-                            <small>${data.details || ''}</small>
-                        `;
-            }
+            messageDiv.className = 'text-sm text-red-600';
+            messageDiv.textContent = data.message || 'Registration failed';
           }
         } catch (error) {
-          messageDiv.className = 'error-message';
-          messageDiv.textContent = 'A network error occurred. Please try again.';
-        } finally {
-          button.disabled = false;
+          messageDiv.className = 'text-sm text-red-600';
+          messageDiv.textContent = 'An error occurred. Please try again.';
         }
       }
 
-      async function handleLogin(event) {
-        event.preventDefault();
-        clearErrors();
-
-        const button = document.getElementById('loginButton');
-        const messageDiv = document.getElementById('loginMessage');
-        button.disabled = true;
-
-        try {
-          const response = await fetch('/v1/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: document.getElementById('loginEmail').value,
-              password: document.getElementById('loginPassword').value,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (response.ok) {
-            messageDiv.className = 'success';
-            messageDiv.innerHTML = `
-                        Login successful!<br>
-                        Your API Key: <div class="api-key">${data.api_key}</div>
-                        <a href="/test.html">Go to API Tester</a>
-                    `;
-            localStorage.setItem('userEmail', data.email);
-            localStorage.setItem('apiKey', data.api_key);
-          } else {
-            if (data.field) {
-              showError(
-                `login${data.field.charAt(0).toUpperCase() + data.field.slice(1)}Error`,
-                data
-              );
-            } else {
-              messageDiv.className = 'error-message';
-              messageDiv.innerHTML = `
-                            ${data.message}<br>
-                            <small>${data.details || ''}</small>
-                        `;
-            }
-          }
-        } catch (error) {
-          messageDiv.className = 'error-message';
-          messageDiv.textContent = 'A network error occurred. Please try again.';
-        } finally {
-          button.disabled = false;
-        }
+      // Check if already logged in
+      if (localStorage.getItem('userEmail') && localStorage.getItem('apiKey')) {
+        window.location.href = getRedirectUrl();
       }
     </script>
   </body>

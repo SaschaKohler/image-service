@@ -57,7 +57,7 @@ jobs:
 
             # NPM Installation mit erhöhtem Timeout
             npm config set script-timeout 600000
-            npm install --production --no-fund --no-audit
+            npm install production --no-fund --no-audit
 
             # Initialize database and run migrations
             echo "Initializing database and running migrations..."

@@ -1,193 +1,243 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML to Image API Tester</title>
+    <title>Test Interface | HTML to Image Service</title>
+    <link href="/css/output.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
-    <link href="https://cdn.tailwindcss.com" rel="stylesheet" />
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        background: #f5f5f5;
-      }
-      .container {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .editor-container {
-        margin: 10px 0;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-      #htmlEditor,
-      #cssEditor,
-      #templateDataEditor {
-        height: 200px;
-        width: 100%;
-      }
-      .response {
-        margin-top: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 4px;
-        overflow-x: auto;
-      }
-      .button-group {
-        margin: 20px 0;
-        display: flex;
-        gap: 10px;
-      }
-      button {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      button:hover {
-        background: #0056b3;
-      }
-      .toggle-button {
-        background: #6c757d;
-      }
-      .toggle-button.active {
-        background: #28a745;
-      }
-      label {
-        display: block;
-        margin: 10px 0 5px;
-        font-weight: bold;
-      }
-      input {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        width: 100%;
-        max-width: 300px;
-      }
-      .preview-container {
-        margin-top: 20px;
-        padding: 15px;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-      .tabs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-      .tab {
-        padding: 8px 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        cursor: pointer;
-        background: #f8f9fa;
-      }
-      .tab.active {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-      }
-    </style>
   </head>
-  <body>
-    <div class="container">
-      <div class="user-info">
-        <div class="user-info-grid">
-          <div class="user-details">
-            <div class="user-email" id="userEmail"></div>
-            <div class="api-key" id="apiKey"></div>
+  <!-- Navigation Component -->
+  <nav class="bg-white shadow">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 justify-between">
+        <div class="flex">
+          <div class="flex flex-shrink-0 items-center">
+            <svg
+              class="h-8 w-8 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span class="ml-2 text-xl font-bold text-gray-900">HTML to Image</span>
           </div>
-          <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-      </div>
-      <h1>HTML to Image API Tester</h1>
-
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab('edit')">Edit</div>
-        <div class="tab" onclick="switchTab('preview')">Preview</div>
-      </div>
-
-      <div id="editTab">
-        <h2>HTML Content</h2>
-        <div>
-          <label>HTML (supports Handlebars variables like {{varName}}):</label>
-          <div class="editor-container">
-            <div id="htmlEditor"></div>
-          </div>
-
-          <label>CSS:</label>
-          <div class="editor-container">
-            <div id="cssEditor"></div>
-          </div>
-
-          <label>Template Variables (JSON):</label>
-          <div class="editor-container">
-            <div id="templateDataEditor"></div>
+          <div class="ml-6 flex items-center space-x-4">
+            <a href="/" class="navlink">Home</a>
+            <a href="/test.html" class="navlink">Test Interface</a>
+            <a href="/gallery.html" class="navlink">Gallery</a>
           </div>
         </div>
-
-        <div class="settings-section">
-          <h2>Settings</h2>
-          <div class="settings-grid">
-            <div>
-              <label for="googleFonts">Google Fonts:</label>
-              <input type="text" id="googleFonts" placeholder="e.g., Roboto|Open Sans" />
-            </div>
-            <div>
-              <label for="deviceScale">Device Scale:</label>
-              <input type="number" id="deviceScale" value="1" min="1" max="3" step="0.1" />
-            </div>
-            <div>
-              <label for="viewportWidth">Viewport Width:</label>
-              <input type="number" id="viewportWidth" placeholder="e.g., 1024" />
-            </div>
-            <div>
-              <label for="viewportHeight">Viewport Height:</label>
-              <input type="number" id="viewportHeight" placeholder="e.g., 768" />
-            </div>
-          </div>
+        <div class="flex items-center">
+          <a
+            href="/auth.html"
+            id="authButton"
+            class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+          >
+            Login
+          </a>
         </div>
-      </div>
-
-      <div id="previewTab" style="display: none">
-        <h2>Preview</h2>
-        <div id="previewContent" class="preview-container"></div>
-      </div>
-
-      <div class="button-group">
-        <button onclick="generateImage()">Generate Image</button>
-        <button onclick="createTemplate()">Save as Template</button>
-        <button onclick="listTemplates()">List Templates</button>
-        <button class="toggle-button" onclick="togglePreview()" id="previewButton">
-          Live Preview
-        </button>
-      </div>
-
-      <div id="response" class="response">
-        <p>Response will appear here...</p>
-      </div>
-
-      <div class="generated-image-container">
-        <img id="generatedImage" class="generated-image" style="display: none" />
-        <div id="imageUrl" class="image-url"></div>
       </div>
     </div>
+  </nav>
+
+  <body class="h-full">
+    <div
+      id="authRequiredNotice"
+      class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Authentication Required</h2>
+        <p class="text-gray-500 mb-6">Please log in or register to use the test interface.</p>
+        <div class="flex justify-end space-x-4">
+          <a
+            href="/auth.html?redirect=test"
+            class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Go to Login
+          </a>
+        </div>
+      </div>
+    </div>
+    <main class="py-10">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-gray-900">Test Interface</h1>
+          <p class="mt-1 text-sm text-gray-500">
+            Use this interface to test the HTML to Image conversion with live preview.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Editor Section -->
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">HTML Content</label>
+              <div
+                class="mt-1 rounded-md shadow-sm border border-gray-300"
+                style="height: 300px"
+                id="htmlEditor"
+              ></div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700">CSS Styles</label>
+              <div
+                class="mt-1 rounded-md shadow-sm border border-gray-300"
+                style="height: 200px"
+                id="cssEditor"
+              ></div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Template Data (JSON)</label>
+              <div
+                class="mt-1 rounded-md shadow-sm border border-gray-300"
+                style="height: 200px"
+                id="templateDataEditor"
+              ></div>
+            </div>
+
+            <div class="space-y-4 bg-white p-4 rounded-lg shadow-sm">
+              <h3 class="font-medium text-gray-900">Image Settings</h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label for="viewportWidth" class="block text-sm font-medium text-gray-700">
+                    Viewport Width
+                  </label>
+                  <div class="mt-1">
+                    <input
+                      type="number"
+                      id="viewportWidth"
+                      value="800"
+                      min="100"
+                      max="2400"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="viewportHeight" class="block text-sm font-medium text-gray-700">
+                    Viewport Height
+                  </label>
+                  <div class="mt-1">
+                    <input
+                      type="number"
+                      id="viewportHeight"
+                      value="600"
+                      min="100"
+                      max="2400"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="deviceScale" class="block text-sm font-medium text-gray-700">
+                    Device Scale
+                  </label>
+                  <div class="mt-1">
+                    <select
+                      id="deviceScale"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="1">1x</option>
+                      <option value="2">2x</option>
+                      <option value="3">3x</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="googleFonts" class="block text-sm font-medium text-gray-700">
+                    Google Fonts (optional)
+                  </label>
+                  <div class="mt-1">
+                    <input
+                      type="text"
+                      id="googleFonts"
+                      placeholder="e.g., Roboto|Open+Sans"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Separate multiple fonts with |</p>
+                </div>
+
+                <div>
+                  <label for="renderDelay" class="block text-sm font-medium text-gray-700">
+                    Render Delay (ms)
+                  </label>
+                  <div class="mt-1">
+                    <input
+                      type="number"
+                      id="renderDelay"
+                      value="0"
+                      min="0"
+                      max="5000"
+                      class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Wait before capture (for animations)</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+              <button onclick="generateImage()" class="btn-primary">Generate Image</button>
+              <button onclick="saveTemplate()" class="btn-secondary">Save as Template</button>
+            </div>
+          </div>
+
+          <!-- Preview Section -->
+          <div>
+            <div class="mb-4">
+              <h2 class="text-lg font-medium text-gray-900">Preview</h2>
+              <p class="text-sm text-gray-500">Live preview of your generated image.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-4">
+              <div id="preview" class="min-h-[200px] border border-gray-200 rounded"></div>
+            </div>
+
+            <div id="response" class="mt-4 bg-gray-50 rounded-md p-4 text-sm text-gray-600 hidden">
+              <!-- Response will be shown here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <style>
+      .btn-primary {
+        @apply rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600;
+      }
+      .btn-secondary {
+        @apply rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50;
+      }
+    </style>
 
     <script>
-      // Initialize ACE editors
-      const htmlEditor = ace.edit('htmlEditor');
-      htmlEditor.setTheme('ace/theme/chrome');
-      htmlEditor.session.setMode('ace/mode/html');
-      htmlEditor.setValue(`<div class="p-8 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4">
+      if (!localStorage.getItem('userEmail') || !localStorage.getItem('apiKey')) {
+        document.getElementById('authRequiredNotice').classList.remove('hidden');
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Initialize ACE editors
+        const htmlEditor = ace.edit('htmlEditor');
+        htmlEditor.setTheme('ace/theme/chrome');
+        htmlEditor.session.setMode('ace/mode/html');
+        htmlEditor.setValue(
+          `<div class="p-8 max-w-md mx-auto bg-white rounded-xl shadow-lg space-y-4">
   <h1 class="text-2xl font-bold text-blue-600">{{title}}</h1>
   <div class="flex items-center space-x-4">
     <img src="{{avatarUrl}}" class="w-12 h-12 rounded-full" alt="Avatar">
@@ -199,219 +249,203 @@
   <div class="bg-gray-100 p-4 rounded">
     {{message}}
   </div>
-</div>`);
+</div>`,
+          -1
+        );
 
-      const cssEditor = ace.edit('cssEditor');
-      cssEditor.setTheme('ace/theme/chrome');
-      cssEditor.session.setMode('ace/mode/css');
-      cssEditor.setValue('/* Additional CSS here */');
+        const cssEditor = ace.edit('cssEditor');
+        cssEditor.setTheme('ace/theme/chrome');
+        cssEditor.session.setMode('ace/mode/css');
+        cssEditor.setValue(`/* Additional CSS here */`, -1);
 
-      const templateDataEditor = ace.edit('templateDataEditor');
-      templateDataEditor.setTheme('ace/theme/chrome');
-      templateDataEditor.session.setMode('ace/mode/json');
-      templateDataEditor.setValue(`{
+        const templateDataEditor = ace.edit('templateDataEditor');
+        templateDataEditor.setTheme('ace/theme/chrome');
+        templateDataEditor.session.setMode('ace/mode/json');
+        templateDataEditor.setValue(
+          `{
   "title": "Welcome!",
   "avatarUrl": "/api/placeholder/48/48",
   "name": "John Doe",
   "description": "Software Developer",
   "message": "This is a test message"
-}`);
+}`,
+          -1
+        );
 
-      // Setup live preview
-      let previewInterval;
-      function togglePreview() {
-        const button = document.getElementById('previewButton');
-        if (button.classList.contains('active')) {
-          button.classList.remove('active');
-          clearInterval(previewInterval);
-        } else {
-          button.classList.add('active');
-          updatePreview();
-          previewInterval = setInterval(updatePreview, 1000);
-        }
-      }
-
-      function updatePreview() {
-        try {
-          const templateData = JSON.parse(templateDataEditor.getValue());
-          const html = htmlEditor.getValue();
-          const css = cssEditor.getValue();
-
-          // Simple Handlebars-like template processing
-          const processedHtml = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-            return templateData[key] || match;
-          });
-
-          const fullHtml = `
-                    <style>${css}</style>
-                    ${processedHtml}
-                `;
-
-          document.getElementById('previewContent').innerHTML = fullHtml;
-        } catch (error) {
-          console.error('Preview error:', error);
-        }
-      }
-
-      function switchTab(tab) {
-        const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(t => t.classList.remove('active'));
-        document
-          .querySelector(`.tab:nth-child(${tab === 'edit' ? '1' : '2'}`)
-          .classList.add('active');
-
-        document.getElementById('editTab').style.display = tab === 'edit' ? 'block' : 'none';
-        document.getElementById('previewTab').style.display = tab === 'preview' ? 'block' : 'none';
-
-        if (tab === 'preview') {
-          updatePreview();
-        }
-      }
-
-      // API configuration
-      const API_BASE_URL = window.location.origin + '/v1';
-
-      function checkAuth() {
-        const email = localStorage.getItem('userEmail');
-        const apiKey = localStorage.getItem('apiKey');
-
-        if (!email || !apiKey) {
-          window.location.href = '/auth.html';
-          return;
-        }
-
-        document.getElementById('userEmail').textContent = email;
-        document.getElementById('apiKey').textContent = `API Key: ${apiKey}`;
-      }
-
-      function logout() {
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('apiKey');
-        window.location.href = '/auth.html';
-      }
-
-      checkAuth();
-
-      function getAuthHeaders() {
-        const email = localStorage.getItem('userEmail');
-        const apiKey = localStorage.getItem('apiKey');
-        return {
-          Authorization: 'Basic ' + btoa(email + ':' + apiKey),
-          'Content-Type': 'application/json',
-        };
-      }
-
-      function getSettings() {
-        return {
-          google_fonts: document.getElementById('googleFonts').value,
-          device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
-          viewport_width: parseInt(document.getElementById('viewportWidth').value) || undefined,
-          viewport_height: parseInt(document.getElementById('viewportHeight').value) || undefined,
-        };
-      }
-
-      async function handleResponse(response) {
-        const responseDiv = document.getElementById('response');
-        const generatedImage = document.getElementById('generatedImage');
-        const imageUrlDiv = document.getElementById('imageUrl');
-
-        try {
-          if (!response.ok) {
-            const errorData = await response.json();
-            responseDiv.innerHTML = `<pre>${JSON.stringify(errorData, null, 2)}</pre>`;
-            generatedImage.style.display = 'none';
-            imageUrlDiv.style.display = 'none';
-            return;
-          }
-
-          const data = await response.json();
-          responseDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-
-          if (data.url) {
-            const fullUrl = window.location.origin + data.url;
-            generatedImage.src = fullUrl;
-            generatedImage.style.display = 'block';
-            imageUrlDiv.textContent = fullUrl;
-            imageUrlDiv.style.display = 'block';
-          }
-        } catch (error) {
-          console.error('Error handling response:', error);
-          responseDiv.innerHTML = `Error: ${error.message}`;
-          generatedImage.style.display = 'none';
-          imageUrlDiv.style.display = 'none';
-        }
-      }
-
-      async function generateImage() {
-        try {
-          let templateData;
+        // Preview-Aktualisierung
+        let previewTimeout;
+        const updatePreview = () => {
           try {
-            templateData = JSON.parse(templateDataEditor.getValue().trim());
-            console.log('Parsed template data:', templateData); // Debug-Log
+            const templateData = JSON.parse(templateDataEditor.getValue());
+            const html = htmlEditor.getValue();
+            const css = cssEditor.getValue();
+
+            // Simple Handlebars-like Template Verarbeitung
+            const processedHtml = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+              return templateData[key] || match;
+            });
+
+            const preview = document.getElementById('preview');
+            preview.innerHTML = `
+          <style>${css}</style>
+          ${processedHtml}
+        `;
           } catch (error) {
-            console.error('Error parsing template data:', error);
-            document.getElementById('response').innerHTML =
-              `Error parsing template data: ${error.message}`;
-            return;
+            console.error('Preview error:', error);
           }
+        };
 
-          const payload = {
-            html: htmlEditor.getValue().trim(),
-            css: cssEditor.getValue().trim(),
-            template_data: templateData, // Änderung hier: template_data statt templateData
-            google_fonts: document.getElementById('googleFonts').value,
-            viewport_width: parseInt(document.getElementById('viewportWidth').value) || undefined,
-            viewport_height: parseInt(document.getElementById('viewportHeight').value) || undefined,
-            device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
-          };
-
-          console.log('Sending payload:', JSON.stringify(payload, null, 2)); // Debug-Log
-
-          const response = await fetch(`${API_BASE_URL}/image`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload),
+        // Live Preview Events
+        [htmlEditor, cssEditor, templateDataEditor].forEach(editor => {
+          editor.session.on('change', () => {
+            clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(updatePreview, 500);
           });
+        });
 
-          await handleResponse(response);
-        } catch (error) {
-          document.getElementById('response').innerHTML = `Error: ${error.message}`;
-        }
-      }
+        // Initial Preview
+        updatePreview();
 
-      async function createTemplate() {
-        try {
-          const payload = {
-            html: htmlEditor.getValue(),
-            css: cssEditor.getValue(),
-            name: 'Test Template',
-            description: 'Created from API Tester',
-            ...getSettings(),
-          };
+        // Image Generation
+        window.generateImage = async () => {
+          const response = document.getElementById('response');
+          response.innerHTML = `
+        <div class="animate-pulse flex space-x-4 bg-gray-50 p-4 rounded-lg">
+            <div class="flex-1 space-y-4 py-1">
+                <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                <div class="space-y-2">
+                    <div class="h-4 bg-gray-300 rounded"></div>
+                </div>
+            </div>
+        </div>
+    `;
+          response.classList.remove('hidden');
 
-          const response = await fetch(`${API_BASE_URL}/template`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload),
+          try {
+            let templateData;
+            try {
+              templateData = JSON.parse(templateDataEditor.getValue().trim());
+            } catch (error) {
+              throw new Error('Invalid template data JSON: ' + error.message);
+            }
+
+            const res = await fetch('/v1/image', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization:
+                  'Basic ' +
+                  btoa(localStorage.getItem('userEmail') + ':' + localStorage.getItem('apiKey')),
+              },
+              body: JSON.stringify({
+                html: htmlEditor.getValue().trim(),
+                css: cssEditor.getValue().trim(),
+                template_data: templateData,
+                viewport_width: parseInt(document.getElementById('viewportWidth').value) || 800,
+                viewport_height: parseInt(document.getElementById('viewportHeight').value) || 600,
+                device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
+                google_fonts: document.getElementById('googleFonts').value,
+                ms_delay: parseInt(document.getElementById('renderDelay').value) || 0,
+              }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.message || 'Failed to generate image');
+
+            response.innerHTML = `
+            <div class="space-y-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <img src="${data.url}" alt="Generated image" class="max-w-full rounded">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="text" 
+                           value="${window.location.origin}${data.url}" 
+                           class="flex-1 rounded-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 px-2"
+                           readonly 
+                           onclick="this.select()">
+                    <button onclick="copyImageUrl(this, '${window.location.origin}${data.url}')" 
+                            class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        Copy URL
+                    </button>
+                </div>
+                <div class="text-sm text-gray-500">
+                    <p>Size: ${document.getElementById('viewportWidth').value}x${document.getElementById('viewportHeight').value}</p>
+                    <p>Scale: ${document.getElementById('deviceScale').value}x</p>
+                </div>
+            </div>
+        `;
+          } catch (error) {
+            response.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded p-4">
+                <p class="text-red-800">${error.message}</p>
+            </div>
+        `;
+          }
+        };
+
+        // Save Template
+        window.saveTemplate = async () => {
+          const response = document.getElementById('response');
+          response.innerHTML = 'Saving template...';
+          response.classList.remove('hidden');
+
+          try {
+            let templateData;
+            try {
+              templateData = JSON.parse(templateDataEditor.getValue().trim());
+            } catch (error) {
+              throw new Error('Invalid template data JSON: ' + error.message);
+            }
+
+            const res = await fetch('/v1/template', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization:
+                  'Basic ' +
+                  btoa(localStorage.getItem('userEmail') + ':' + localStorage.getItem('apiKey')),
+              },
+              body: JSON.stringify({
+                html: htmlEditor.getValue().trim(),
+                css: cssEditor.getValue().trim(),
+                template_data: templateData,
+                name: 'Test Template',
+                description: 'Created from Test Interface',
+              }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.message || 'Failed to save template');
+
+            response.innerHTML = `
+          <div class="bg-green-50 border border-green-200 rounded p-4">
+            <p class="text-green-800">Template saved successfully!</p>
+          </div>
+        `;
+          } catch (error) {
+            response.innerHTML = `
+          <div class="bg-red-50 border border-red-200 rounded p-4">
+            <p class="text-red-800">${error.message}</p>
+          </div>
+        `;
+          }
+        };
+
+        // URL Copy Funktion
+        window.copyImageUrl = (button, url) => {
+          navigator.clipboard.writeText(url).then(() => {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            button.classList.add('bg-green-50', 'text-green-700', 'ring-green-600/20');
+            setTimeout(() => {
+              button.textContent = originalText;
+              button.classList.remove('bg-green-50', 'text-green-700', 'ring-green-600/20');
+            }, 2000);
           });
-
-          await handleResponse(response);
-        } catch (error) {
-          document.getElementById('response').innerHTML = `Error: ${error.message}`;
-        }
-      }
-
-      async function listTemplates() {
-        try {
-          const response = await fetch(`${API_BASE_URL}/template`, {
-            headers: getAuthHeaders(),
-          });
-
-          await handleResponse(response);
-        } catch (error) {
-          document.getElementById('response').innerHTML = `Error: ${error.message}`;
-        }
-      }
+        };
+      });
     </script>
   </body>
 </html>

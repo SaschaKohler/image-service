@@ -7,10 +7,14 @@ const fsPromises = require('fs').promises;
 const generateImage = require('./imageGenerator');
 const authMiddleware = require('./middleware/auth');
 const templateProcessing = require('./middleware/templateProcessing');
+const ImageService = require('./services/imageService');
+
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const authRoutes = require('./routes/auth');
 const sharp = require('sharp');
+const { warn } = require('console');
+const { ALL } = require('dns');
 const app = express();
 
 // Basic Middleware
@@ -74,6 +78,7 @@ app.get('/health', async (_, res) => {
     });
   }
 });
+let imageService; // Deklariere den Service außerhalbkk
 
 // Server starten
 (async () => {
@@ -85,9 +90,12 @@ app.get('/health', async (_, res) => {
     db = await initializeDb();
     console.log('Database initialized');
 
+    imageService = new ImageService(db);
     // 2. Stelle DB über Middleware zur Verfügung
     app.use((req, res, next) => {
       req.db = db;
+      req.imageService = imageService; // Mache imageService in Requests verfügbar
+
       next();
     });
 
@@ -281,9 +289,52 @@ app.get('/health', async (_, res) => {
         res.status(500).json({ error: 'Failed to list templates' });
       }
     });
-
-    app.post('/v1/image', async (req, res) => {
+    // Neue Route für Statistiken
+    app.get('/v1/stats', authMiddleware, async (req, res) => {
       try {
+        const stats = await imageService.getImageStats(req.user.id);
+        res.json(stats);
+      } catch (error) {
+        console.error('Failed to get user stats:', error);
+        res.status(500).json({ error: 'Failed to get usage statistics' });
+      }
+    });
+
+    // Füge Route für Bilderliste hinzu
+    app.get('/v1/images', authMiddleware, async (req, res) => {
+      try {
+        const limit = parseInt(req.query.limit) || 100;
+        const offset = parseInt(req.query.offset) || 0;
+
+        const images = await imageService.getUserImages(req.user.id, limit, offset);
+
+        res.json({
+          data: images,
+          pagination: {
+            limit,
+            offset,
+            has_more: images.length === limit,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+        res.status(500).json({
+          error: 'Failed to fetch images',
+          message: error.message,
+        });
+      }
+    });
+    app.post('/v1/image', async (req, res) => {
+      // Prüfe ob User noch Bilder generieren darf
+      try {
+        // Prüfe ob User noch Bilder generieren darf
+        const canGenerate = await req.imageService.canGenerate(req.user.id);
+        if (!canGenerate) {
+          return res.status(429).json({
+            error: 'Rate Limit Exceeded',
+            message: 'Monthly image generation limit reached',
+          });
+        }
         const {
           html,
           css,
@@ -326,6 +377,9 @@ app.get('/health', async (_, res) => {
         const imagePath = path.join(CONFIG.UPLOAD_DIR, `${imageId}.png`);
 
         await fsPromises.writeFile(imagePath, image);
+
+        // Speichere das Bild in der Datenbank
+        await imageService.recordGeneratedImage(req.user.id, imagePath);
 
         if (!global.imageStore) global.imageStore = new Map();
         global.imageStore.set(imageId, image);
