@@ -1,4 +1,4 @@
-// src/db/migrations/003_add_template_data.js
+// src/db/migrations/002_add_template_data.js
 async function up(db) {
   await db.exec(`
     -- Füge template_data Spalte zur templates Tabelle hinzu
@@ -10,6 +10,13 @@ async function up(db) {
     SET template_data = example_data 
     WHERE template_data IS NULL;
   `);
+
+  // Füge diese Migration zur migrations Tabelle hinzu
+  await db.run('INSERT INTO migrations (version, name, applied_at) VALUES (?, ?, ?)', [
+    2,
+    '002_add_template_data.js',
+    new Date().toISOString(),
+  ]);
 
   console.log('Added template_data column to templates table');
 }
@@ -48,6 +55,9 @@ async function down(db) {
 
     -- Benenne temporäre Tabelle um
     ALTER TABLE templates_temp RENAME TO templates;
+
+    -- Entferne die Migration aus der migrations Tabelle
+    DELETE FROM migrations WHERE version = 2;
   `);
 
   console.log('Removed template_data column from templates table');

@@ -20,8 +20,16 @@ async function getMigrationFiles() {
     const files = await fs.readdir(migrationsDir);
     return files
       .filter(f => f.endsWith('.js'))
-      .sort()
-      .map(f => path.join(migrationsDir, f));
+      .sort((a, b) => {
+        const versionA = parseInt(a.split('_')[0]);
+        const versionB = parseInt(b.split('_')[0]);
+        return versionA - versionB;
+      })
+      .map(f => ({
+        version: parseInt(f.split('_')[0]),
+        path: path.join(migrationsDir, f),
+        name: f,
+      }));
   } catch (error) {
     console.error('Error reading migrations directory:', error);
     return [];
@@ -29,11 +37,9 @@ async function getMigrationFiles() {
 }
 
 async function initializeDatabase(dbPath) {
-  // Stelle sicher, dass die Datei existiert
   try {
     await fs.access(dbPath);
   } catch {
-    // Erstelle eine leere Datei wenn sie nicht existiert
     await fs.writeFile(dbPath, '');
   }
 
@@ -43,6 +49,15 @@ async function initializeDatabase(dbPath) {
   });
 }
 
+async function getAppliedMigrations(db) {
+  try {
+    const migrations = await db.all('SELECT version FROM migrations ORDER BY version');
+    return new Set(migrations.map(m => m.version));
+  } catch (error) {
+    return new Set();
+  }
+}
+
 async function migrate(direction = 'up') {
   const dbPath = await ensureDbDirectory();
   console.log(`Using database at: ${dbPath}`);
@@ -50,53 +65,38 @@ async function migrate(direction = 'up') {
   let db;
   try {
     db = await initializeDatabase(dbPath);
-
-    // Migrations-Tabelle wird jetzt in der ersten Migration erstellt
     const migrationFiles = await getMigrationFiles();
+    const appliedMigrations = await getAppliedMigrations(db);
 
     if (direction === 'up') {
       console.log('Running migrations...');
 
-      for (const file of migrationFiles) {
-        const migration = require(file);
-        const version = parseInt(path.basename(file).split('_')[0]);
+      for (const migration of migrationFiles) {
+        if (!appliedMigrations.has(migration.version)) {
+          console.log(`Applying migration ${migration.name}...`);
+          const module = require(migration.path);
 
-        try {
-          // Prüfe ob Migration bereits ausgeführt wurde
-          const applied = await db
-            .get('SELECT version FROM migrations WHERE version = ?', version)
-            .catch(() => null);
-
-          if (!applied) {
-            console.log(`Applying migration ${path.basename(file)}...`);
-            await migration.up(db);
-            console.log(`Migration ${path.basename(file)} completed successfully`);
-          } else {
-            console.log(`Skipping migration ${path.basename(file)} - already applied`);
+          try {
+            await module.up(db);
+            console.log(`Migration ${migration.name} completed successfully`);
+          } catch (error) {
+            console.error(`Error applying migration ${migration.name}:`, error);
+            throw error;
           }
-        } catch (error) {
-          console.error(`Error applying migration ${path.basename(file)}:`, error);
-          throw error;
+        } else {
+          console.log(`Skipping migration ${migration.name} - already applied`);
         }
       }
     } else if (direction === 'down') {
-      // Hole die letzte ausgeführte Migration
-      const lastMigration = await db
-        .get('SELECT * FROM migrations ORDER BY version DESC LIMIT 1')
-        .catch(() => null);
+      // Get the last applied migration
+      const lastApplied = Math.max(...Array.from(appliedMigrations));
+      const migrationToRollback = migrationFiles.find(m => m.version === lastApplied);
 
-      if (lastMigration) {
-        const migrationFile = migrationFiles.find(
-          f => parseInt(path.basename(f).split('_')[0]) === lastMigration.version
-        );
-
-        if (migrationFile) {
-          console.log(`Rolling back migration ${path.basename(migrationFile)}...`);
-          const migration = require(migrationFile);
-          await migration.down(db);
-          await db.run('DELETE FROM migrations WHERE version = ?', lastMigration.version);
-          console.log('Rollback completed successfully');
-        }
+      if (migrationToRollback) {
+        console.log(`Rolling back migration ${migrationToRollback.name}...`);
+        const module = require(migrationToRollback.path);
+        await module.down(db);
+        console.log('Rollback completed successfully');
       } else {
         console.log('No migrations to roll back');
       }

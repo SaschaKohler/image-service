@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en" class="h-full bg-gray-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML to Image Service</title>
+    <link href="/css/output.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+  </head>
+  <body class="h-full">
+    <!-- Navigation Component -->
+    <nav class="bg-white shadow">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 justify-between">
+          <div class="flex">
+            <div class="flex flex-shrink-0 items-center">
+              <svg
+                class="h-8 w-8 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span class="ml-2 text-xl font-bold text-gray-900">HTML to Image</span>
+            </div>
+            <div class="ml-6 flex items-center space-x-4">
+              <a href="/" class="navlink">Home</a>
+              <a href="/test.html" class="navlink">Test Interface</a>
+              <a href="/gallery.html" class="navlink">Gallery</a>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <a
+              href="/auth.html"
+              id="authButton"
+              class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+            >
+              Login
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content für index.html -->
+    <main class="relative isolate">
+      <!-- Hero section -->
+      <div class="relative pt-14">
+        <div class="py-24 sm:py-32">
+          <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl text-center">
+              <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                Transform HTML to Images
+              </h1>
+              <p class="mt-6 text-lg leading-8 text-gray-600">
+                Generate beautiful images from your HTML templates. Perfect for social media cards,
+                thumbnails, and dynamic image content.
+              </p>
+              <div class="mt-10 flex items-center justify-center gap-x-6">
+                <a
+                  href="/test.html"
+                  class="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                >
+                  Try it now
+                </a>
+                <a href="/gallery.html" class="text-sm font-semibold leading-6 text-gray-900">
+                  View Gallery <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature section -->
+      <div class="mx-auto mt-8 max-w-7xl px-6 sm:mt-16 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Features</h2>
+          <p class="mt-6 text-lg leading-8 text-gray-600">
+            Everything you need to convert your HTML templates into stunning images.
+          </p>
+        </div>
+
+        <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+            <div class="flex flex-col">
+              <dt class="text-base font-semibold leading-7 text-gray-900">
+                <div class="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                  <svg
+                    class="h-6 w-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                    />
+                  </svg>
+                </div>
+                Template Support
+              </dt>
+              <dd class="mt-1 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                <p class="flex-auto">
+                  Create reusable templates with dynamic content using Handlebars syntax.
+                </p>
+              </dd>
+            </div>
+            <div class="flex flex-col">
+              <dt class="text-base font-semibold leading-7 text-gray-900">
+                <div class="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                  <svg
+                    class="h-6 w-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                Multiple Formats
+              </dt>
+              <dd class="mt-1 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                <p class="flex-auto">
+                  Export your images in various formats including PNG, JPEG, and WebP.
+                </p>
+              </dd>
+            </div>
+            <div class="flex flex-col">
+              <dt class="text-base font-semibold leading-7 text-gray-900">
+                <div class="mb-6 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                  <svg
+                    class="h-6 w-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                    />
+                  </svg>
+                </div>
+                Customizable Options
+              </dt>
+              <dd class="mt-1 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                <p class="flex-auto">
+                  Adjust dimensions, quality, and other rendering options to match your needs.
+                </p>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </main>
+
+    <style>
+      .navlink {
+        @apply inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100;
+      }
+      .navlink.active {
+        @apply bg-gray-100;
+      }
+    </style>
+
+    <script>
+      // Update active navigation link
+      document.addEventListener('DOMContentLoaded', () => {
+        const currentPath = window.location.pathname;
+        const navlinks = document.querySelectorAll('.navlink');
+
+        navlinks.forEach(link => {
+          if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+          }
+        });
+
+        // Update auth button based on login state
+        const authButton = document.getElementById('authButton');
+        const email = localStorage.getItem('userEmail');
+
+        if (email) {
+          authButton.textContent = 'Logout';
+          authButton.addEventListener('click', e => {
+            e.preventDefault();
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('apiKey');
+            window.location.href = '/auth.html';
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
