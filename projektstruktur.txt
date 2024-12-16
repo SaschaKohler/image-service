@@ -1,0 +1,164 @@
+.
+├── README.md
+├── db
+├── eslint.config.js
+├── jest.config.js
+├── package-lock.json
+├── package.json
+├── prettier.config.js
+├── projektstruktur.txt
+├── src
+│   ├── config.js
+│   ├── db
+│   │   ├── migrate.js
+│   │   ├── migrations
+│   │   │   ├── 001_initial_setup.js
+│   │   │   └── 003_add_template_data.js
+│   │   └── schema.js
+│   ├── imageGenerator.js
+│   ├── middleware
+│   │   ├── auth.js
+│   │   └── templateProcessing.js
+│   ├── public
+│   │   ├── auth.html
+│   │   └── test.html
+│   ├── routes
+│   │   └── auth.js
+│   ├── server.js
+│   ├── templates.db
+│   ├── uploads
+│   │   ├── 1734106431680.png
+│   │   ├── 1734107324632.png
+│   │   ├── 1734107432678.png
+│   │   ├── 1734107911040.png
+│   │   ├── 1734108035360.png
+│   │   ├── img-1734250485851-6cgkva31u9e.png
+│   │   └── img-1734250521256-j0viqchq41.png
+│   └── utils
+│       └── database.js
+├── test.db
+├── tests
+│   ├── imageGenerator.test.js
+│   ├── server.test.js
+│   └── setup.js
+└── uploads
+    ├── img-1734250812907-c6m3g5drs3m.png
+    ├── img-1734250856664-xmc0umve5en.png
+    ├── img-1734250870569-21uda5wgyqr.png
+    ├── img-1734250882781-8xv0uiz1r7r.png
+    ├── img-1734251210020-zraiarldtgi.png
+    ├── img-1734251638831-g6nztkfwi75.png
+    ├── img-1734251733058-fsoj5tdn2cs.png
+    ├── img-1734251735051-t7isllc5xoa.png
+    ├── img-1734251805645-tzq4y6ll5rj.png
+    ├── img-1734252356300-e4oenbnsxeg.png
+    ├── img-1734270567049-rko38kkdfo.png
+    ├── img-1734270588037-s4ydx0ze8a8.png
+    ├── img-1734270856959-adcggk06j8a.png
+    ├── img-1734270875358-86cmveujogp.png
+    ├── img-1734271267060-kv0boigvqdr.png
+    ├── img-1734271303543-nyakl6yia2.png
+    ├── img-1734271348248-gun1ef4ii8a.png
+    ├── img-1734272458961-9v3897cutw6.png
+    ├── img-1734272490083-f1t1f2uaoy.png
+    ├── img-1734272563779-ehh7cw0gvfm.png
+    ├── img-1734272751651-tkuoqdy9tlc.png
+    ├── img-1734272760882-uud557zbvyb.png
+    ├── img-1734272778930-vtv3xc3knqs.png
+    ├── img-1734272951208-me6bqmt93fs.png
+    ├── img-1734273025778-6v5xqyciubb.png
+    ├── img-1734273036981-zjvppbjcxx.png
+    ├── img-1734273091024-xeq2okhgym.png
+    ├── img-1734273103135-c3crmgn61sb.png
+    ├── img-1734273146351-7rev1tkpfw.png
+    ├── img-1734273232772-7xq7xpdg2jo.png
+    ├── img-1734273248493-9tioluomtff.png
+    ├── img-1734273249843-e1adf1focfp.png
+    ├── img-1734273252139-2lvu9vyor4e.png
+    ├── img-1734273285162-fujq6rajraf.png
+    ├── img-1734273516343-q0kx6pyt1es.png
+    ├── img-1734273539027-77h2m2gmiyd.png
+    ├── img-1734273562492-qxsmti2ftb.png
+    ├── img-1734273816140-hsp52hc92st.png
+    ├── img-1734273842843-uhh60h9u6b.png
+    ├── img-1734274369584-3vr4fh3yh7v.png
+    ├── img-1734274463272-v0r4tct2ysh.png
+    ├── img-1734274498823-my2id8o4co.png
+    ├── img-1734274551624-1um4nu42xvf.png
+    ├── img-1734274558746-ct866heafre.png
+    ├── img-1734274601250-qi2k6bxuvdk.png
+    ├── img-1734274638384-kq10s50nvq.png
+    ├── img-1734275220733-n1vy4esodk.png
+    ├── img-1734277700597-46qtezbb715.png
+    ├── img-1734277741838-pmdyosaf1r.png
+    ├── img-1734278223909-3jqp29uqcyy.png
+    ├── img-1734278266816-qe4tgc1uwun.png
+    ├── img-1734278384240-mvoce2so54.png
+    ├── img-1734278503831-k8iazzcgbsc.png
+    ├── img-1734278522402-x1kozor5jb.png
+    ├── img-1734279138098-yxmjilqz0ft.png
+    ├── img-1734279246629-28nq5d9m8de.png
+    ├── img-1734279426153-9yh1ttlaut5.png
+    ├── img-1734279427273-czpxy5z38is.png
+    ├── img-1734279428520-wghjpduvt3o.png
+    ├── img-1734279429700-pi8sab4qynm.png
+    ├── img-1734279430933-5hhmt4nedct.png
+    ├── img-1734279432162-hvzbzhlqu5m.png
+    ├── img-1734279691127-s7e73w6bxb.png
+    ├── img-1734279692340-vnkrndjveq9.png
+    ├── img-1734279693544-wxbnozgrjy7.png
+    ├── img-1734279694846-5iipxr82isb.png
+    ├── img-1734279696094-44stqti1s0s.png
+    ├── img-1734279697327-v5u25vwxzik.png
+    ├── img-1734279698567-q9oszyd74t7.png
+    ├── img-1734279785578-manexhogm9.png
+    ├── img-1734279786814-b7vbby9evx5.png
+    ├── img-1734279788221-q040wyn567i.png
+    ├── img-1734279789778-uk4t4fro12.png
+    ├── img-1734279790981-pfx9o2az58.png
+    ├── img-1734279792230-devvvipc3qc.png
+    ├── img-1734279793432-ue7el1pmqkg.png
+    ├── img-1734279963711-ccd2zlgy3e.png
+    ├── img-1734279964891-eceu8075mfb.png
+    ├── img-1734279966107-uhtp0h2wcnd.png
+    ├── img-1734279967267-d1ya51q2iua.png
+    ├── img-1734279968466-mwhfvlnwnvs.png
+    ├── img-1734279969610-wut1urqbsd.png
+    ├── img-1734279970879-3z60uyvvko2.png
+    ├── img-1734280145077-84rpp3a5p39.png
+    ├── img-1734280146359-w5w508ecrxk.png
+    ├── img-1734280147628-8ukj5jfbjcf.png
+    ├── img-1734280148900-at3htblblr4.png
+    ├── img-1734280150126-t2u956tttj.png
+    ├── img-1734280151433-i3uslnfw82.png
+    ├── img-1734280152760-kasv5joepn.png
+    ├── img-1734280354016-45zvakw121f.png
+    ├── img-1734280355288-xu3plnhltdj.png
+    ├── img-1734280357043-4xrowurgllg.png
+    ├── img-1734280358308-wwui6fzp5n.png
+    ├── img-1734280359610-6i7oeutpj4.png
+    ├── img-1734280360943-tds6l0lyb2.png
+    ├── img-1734280362211-l9tiyfflwh.png
+    ├── img-1734280522314-vgib3dk5vzf.png
+    ├── img-1734280523640-dvgqdm65w4k.png
+    ├── img-1734280524905-doxisg09np8.png
+    ├── img-1734280526188-v31n72mjwvr.png
+    ├── img-1734280527421-zety8bs614i.png
+    ├── img-1734280528760-fv4hhv6jcs6.png
+    ├── img-1734280600977-9oq2kfblhdq.png
+    ├── img-1734280633555-a04pd3swzyk.png
+    ├── img-1734280653432-e42tcpuz2ql.png
+    ├── img-1734280664728-q6nrfktj5q.png
+    ├── img-1734280671176-ohbc4poczq.png
+    ├── img-1734280759587-wdleuy3p5k.png
+    ├── img-1734280760894-5366ciz5wai.png
+    ├── img-1734280762277-mkyy5u40rlc.png
+    ├── img-1734280763585-b7970hebryb.png
+    ├── img-1734280765729-x1mrb3h49o.png
+    ├── img-1734280766954-hdbpym5lz8.png
+    ├── img-1734280768237-m93x5lovu0l.png
+    ├── img-1734280769487-084zosovpfer.png
+    ├── img-1734280770727-ndt7v032yjj.png
+    └── img-1734280771908-u6cofuoim.png
+
+11 directories, 150 files

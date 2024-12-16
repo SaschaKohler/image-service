@@ -46,7 +46,6 @@ async function initializeDb() {
     driver: sqlite3.Database,
   });
 
-  await require('./db/schema').initializeDb(database);
   return database;
 }
 
@@ -79,6 +78,9 @@ app.get('/health', async (_, res) => {
 // Server starten
 (async () => {
   try {
+    console.log('Starting server initialization...');
+    console.log('Database path:', CONFIG.DB_PATH);
+
     // 1. Initialisiere DB
     db = await initializeDb();
     console.log('Database initialized');

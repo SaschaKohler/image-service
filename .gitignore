@@ -6,3 +6,5 @@ db/*
 !db/.gitkeep
 coverage/
 .DS_Store
+*.db
+uploads/**/*.png
