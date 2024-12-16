@@ -9,3 +9,4 @@ coverage/
 *.db
 uploads/**/*.png
 src/templates.db
+test.db

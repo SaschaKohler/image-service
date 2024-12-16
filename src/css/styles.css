@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles */
+@layer components {
+  .prose {
+    @apply max-w-none text-slate-600;
+  }
+  .prose h1 {
+    @apply text-3xl font-bold text-slate-900 mb-8;
+  }
+  .prose h2 {
+    @apply text-2xl font-bold text-slate-900 mb-6;
+  }
+  .prose h3 {
+    @apply text-lg font-semibold text-slate-800 mb-4;
+  }
+  .prose p {
+    @apply mb-4;
+  }
+  .prose pre {
+    @apply my-4 p-4 bg-slate-900 rounded-xl overflow-x-auto;
+  }
+  .prose code {
+    @apply font-mono text-sm;
+  }
+}
 /* Custom styles can go here */
 .image-card {
   @apply transition-all duration-200 ease-in-out;
