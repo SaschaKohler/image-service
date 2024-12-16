@@ -48,8 +48,13 @@ jobs:
               echo "No changes in package.json, skipping npm install"
             else
               echo "Changes detected in package.json, running npm install"
-              sudo -u www-data npm install --production
+              sudo -u www-data npm install --no-fund --no-audit  # Removed --production
             fi
+
+            # Build CSS
+            echo "Building CSS with Tailwind..."
+            sudo -u www-data npm run build:css
+
 
             # Run database migrations
             echo "Running database migrations..."
