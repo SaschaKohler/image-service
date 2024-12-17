@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
   </head>
   <body class="bg-slate-50 min-h-screen">
-        <!-- Navigation Component -->
+    <!-- Navigation Component -->
     <nav class="bg-white shadow">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 justify-between">
@@ -57,7 +57,14 @@
             <h1 class="text-3xl font-bold text-gray-900">Image Gallery</h1>
             <p class="mt-1 text-sm text-gray-500">Generated images with shareable links</p>
           </div>
-          <div class="mt-4 md:mt-0">
+          <div class="mt-4 md:mt-0 flex gap-2">
+            <button
+              id="bulkDeleteBtn"
+              onclick="handleBulkDelete()"
+              class="hidden items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Delete Selected (<span id="selectedCount">0</span>)
+            </button>
             <a
               href="/test.html"
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -66,27 +73,29 @@
             </a>
           </div>
         </div>
+      </div>
 
-        <!-- Usage Stats -->
-        <div class="mb-8 rounded-lg bg-white p-6 shadow-sm stats-container">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-base font-semibold leading-6 text-gray-900">Nutzungsstatistiken</h2>
-                <div id="planBadge">Loading...</div>
-            </div>
-            
-            <div class="mt-2">
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                    <div id="usageBar" 
-                        class="bg-green-600 h-2.5 rounded-full transition-all duration-300" 
-                        style="width: 0%">
-                    </div>
-                </div>
-                <div class="flex justify-between items-center mt-1">
-                    <span id="usageCount" class="text-sm text-gray-600">Bilder generiert...</span>
-                    <span id="usageLimit" class="text-sm text-gray-600">Bilder gesamt...</span>
-                </div>
-            </div>
+      <!-- Usage Stats -->
+      <div class="mb-8 rounded-lg bg-white p-6 shadow-sm stats-container">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-semibold leading-6 text-gray-900">Nutzungsstatistiken</h2>
+          <div id="planBadge">Loading...</div>
         </div>
+
+        <div class="mt-2">
+          <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+            <div
+              id="usageBar"
+              class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
+              style="width: 0%"
+            ></div>
+          </div>
+          <div class="flex justify-between items-center mt-1">
+            <span id="usageCount" class="text-sm text-gray-600">Bilder generiert...</span>
+            <span id="usageLimit" class="text-sm text-gray-600">Bilder gesamt...</span>
+          </div>
+        </div>
+      </div>
 
       <!-- Image Grid -->
       <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,7 +151,7 @@
               href="/test.html"
               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-            Bild erstellen  
+              Bild erstellen
             </a>
           </div>
         </div>
@@ -203,6 +212,14 @@
     </div>
 
     <script>
+      let selectedImages = new Set();
+      let deletedImages = new Set();
+
+      document.addEventListener('DOMContentLoaded', () => {
+        loadUsageStats();
+        loadImages();
+      });
+
       async function loadUsageStats() {
         try {
           const response = await fetch('/v1/stats', {
@@ -251,10 +268,16 @@
 
           // Plan Badge mit entsprechender Farbe
           planBadge.innerHTML = `
-            <span class="inline-flex items-center rounded-md bg-${textColorClass.replace('text-', 'bg-')}/10 px-2 py-1 text-xs font-medium ${textColorClass} ring-1 ring-inset ring-${textColorClass.replace('text-', 'ring-')}/20">
-                ${stats.plan} Plan
-            </span>
-        `;
+      <span class="inline-flex items-center rounded-md bg-${textColorClass.replace(
+        'text-',
+        'bg-'
+      )}/10 px-2 py-1 text-xs font-medium ${textColorClass} ring-1 ring-inset ring-${textColorClass.replace(
+        'text-',
+        'ring-'
+      )}/20">
+        ${stats.plan} Plan
+      </span>
+    `;
 
           // Zeige Warnung wenn das Limit fast erreicht ist
           if (percentage > 90) {
@@ -274,50 +297,140 @@
           document.getElementById('planBadge').textContent = 'Error loading stats';
         }
       }
+
       function createImageCard(image) {
         const fullUrl = `${window.location.origin}/uploads/${image.original_filename}`;
         const date = new Date(image.created_at);
 
         return `
-                <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                    <div class="cursor-pointer" onclick="showPreview('${image.file_path}', '${fullUrl}')">
-                        <img src="/uploads/${image.original_filename}" 
-                             alt="Generated image" 
-                             class="w-full h-48 object-cover hover:opacity-90 transition-opacity">
-                    </div>
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs text-gray-500">${date.toLocaleString()}</span>
-                        </div>
-                        <div class="mt-2 flex items-center gap-2">
-                            <input type="text" value="${fullUrl}" readonly 
-                                   class="flex-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 text-sm px-2"
-                                   onclick="this.select()">
-                            <button class="copy-btn rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-                                    data-clipboard-text="${fullUrl}">
-                                Copy
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden relative group" data-image-id="${image.id}">
+      <div class="absolute top-2 left-2 z-10">
+        <input type="checkbox" 
+               class="image-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+               onclick="toggleImageSelection('${image.id}', this)">
+      </div>
+      <div class="cursor-pointer" onclick="showPreview('${image.file_path}', '${fullUrl}')">
+        <img src="/uploads/${image.original_filename}" 
+             alt="Generated image" 
+             class="w-full h-48 object-cover hover:opacity-90 transition-opacity">
+      </div>
+      <div class="p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-gray-500">${date.toLocaleString()}</span>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+          <input type="text" value="${fullUrl}" readonly 
+                 class="flex-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 text-sm px-2"
+                 onclick="this.select()">
+          <button class="copy-btn rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                  data-clipboard-text="${fullUrl}">
+            Copy
+          </button>
+          <button onclick="deleteImage('${image.id}')" 
+                  class="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
       }
 
-      function showPreview(imagePath, fullUrl) {
-        document.getElementById('previewModal').classList.remove('hidden');
-        document.getElementById('previewImage').src = `/uploads/${path.basename(imagePath)}`;
-        document.getElementById('previewUrl').value = fullUrl;
-        document.body.style.overflow = 'hidden';
+      function toggleImageSelection(imageId, checkbox) {
+        if (checkbox.checked) {
+          selectedImages.add(imageId);
+        } else {
+          selectedImages.delete(imageId);
+        }
+        updateBulkDeleteButton();
       }
 
-      function closePreview() {
-        document.getElementById('previewModal').classList.add('hidden');
-        document.body.style.overflow = 'auto';
+      function updateBulkDeleteButton() {
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCount = document.getElementById('selectedCount');
+
+        selectedCount.textContent = selectedImages.size;
+        bulkDeleteBtn.style.display = selectedImages.size > 0 ? 'inline-flex' : 'none';
+      }
+
+      async function handleBulkDelete() {
+        if (!confirm(`Are you sure you want to delete ${selectedImages.size} images?`)) {
+          return;
+        }
+
+        const deletePromises = Array.from(selectedImages).map(imageId =>
+          deleteImage(imageId, false)
+        );
+
+        try {
+          const results = await Promise.allSettled(deletePromises);
+          const succeeded = results.filter(r => r.status === 'fulfilled').length;
+          const failed = results.filter(r => r.status === 'rejected').length;
+
+          selectedImages.clear();
+          updateBulkDeleteButton();
+          loadUsageStats();
+
+          if (failed > 0) {
+            alert(`${succeeded} images deleted successfully, ${failed} failed to delete.`);
+          }
+        } catch (error) {
+          console.error('Error during bulk delete:', error);
+          alert('Some images could not be deleted. Please try again.');
+        }
+      }
+
+      async function deleteImage(imageId, showConfirm = true) {
+        if (showConfirm && !confirm('Are you sure you want to delete this image?')) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`/v1/image/${imageId}`, {
+            method: 'DELETE',
+            headers: {
+              Authorization:
+                'Basic ' +
+                btoa(localStorage.getItem('userEmail') + ':' + localStorage.getItem('apiKey')),
+            },
+          });
+
+          if (response.status === 202) {
+            // Füge das Bild zu den gelöschten hinzu
+            deletedImages.add(imageId);
+            // Entferne die Bildkarte aus der Galerie
+            const card = document.querySelector(`[data-image-id="${imageId}"]`);
+            if (card) {
+              card.remove();
+            }
+            selectedImages.delete(imageId);
+            updateBulkDeleteButton();
+
+            if (showConfirm) {
+              loadUsageStats();
+            }
+
+            // Prüfe ob die Galerie leer ist
+            const gallery = document.getElementById('gallery');
+            if (gallery.children.length === 0) {
+              document.getElementById('emptyState').classList.remove('hidden');
+            }
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete image');
+          }
+        } catch (error) {
+          console.error('Error deleting image:', error);
+          if (showConfirm) {
+            alert('Failed to delete image: ' + error.message);
+          }
+          throw error;
+        }
       }
 
       async function loadImages() {
         const gallery = document.getElementById('gallery');
-        gallery.innerHTML = ''; // Clear existing content
+        gallery.innerHTML = '';
 
         try {
           const response = await fetch('/v1/images', {
@@ -333,9 +446,18 @@
           const data = await response.json();
 
           if (data.data && data.data.length > 0) {
-            data.data.forEach(image => {
-              gallery.insertAdjacentHTML('beforeend', createImageCard(image));
-            });
+            // Filtere gelöschte Bilder aus
+            const activeImages = data.data.filter(image => !deletedImages.has(image.id));
+
+            if (activeImages.length > 0) {
+              activeImages.forEach(image => {
+                const cardHtml = createImageCard(image);
+                gallery.insertAdjacentHTML('beforeend', cardHtml);
+              });
+              document.getElementById('emptyState').classList.add('hidden');
+            } else {
+              document.getElementById('emptyState').classList.remove('hidden');
+            }
           } else {
             document.getElementById('emptyState').classList.remove('hidden');
           }
@@ -359,21 +481,67 @@
         }
       }
 
-      // Initialize
-      document.addEventListener('DOMContentLoaded', () => {
-           loadUsageStats(); // Lade Stats beim Start
-        loadImages();
-      });
+      function showPreview(imagePath, fullUrl) {
+        const previewModal = document.getElementById('previewModal');
+        const previewImage = document.getElementById('previewImage');
+        const previewUrl = document.getElementById('previewUrl');
 
-      // Handle ESC key for modal
+        // Extrahiere nur den Dateinamen aus dem Pfad
+        const imageFileName = imagePath.split('/').pop();
+
+        previewModal.classList.remove('hidden');
+        previewImage.src = `/uploads/${imageFileName}`;
+        previewUrl.value = fullUrl;
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closePreview() {
+        const previewModal = document.getElementById('previewModal');
+        const previewImage = document.getElementById('previewImage');
+
+        previewModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        // Reset image source to prevent potential memory leaks
+        previewImage.src = '';
+      }
+
+      function copyPreviewUrl() {
+        const urlInput = document.getElementById('previewUrl');
+
+        // Moderne Clipboard API verwenden
+        navigator.clipboard
+          .writeText(urlInput.value)
+          .then(() => {
+            const copyButton = document.querySelector('#previewModal .copy-url-btn');
+            copyButton.textContent = 'Copied!';
+            copyButton.classList.add('bg-green-600', 'hover:bg-green-700');
+            copyButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+
+            setTimeout(() => {
+              copyButton.textContent = 'Copy URL';
+              copyButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+              copyButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }, 2000);
+          })
+          .catch(err => {
+            console.error('Failed to copy URL:', err);
+            alert('Failed to copy URL to clipboard');
+          });
+      }
+
+      // Event Listeners für Modal
       document.addEventListener('keydown', e => {
         if (e.key === 'Escape') closePreview();
       });
 
-      // Handle click outside modal
       document.getElementById('previewModal').addEventListener('click', e => {
         if (e.target.id === 'previewModal') closePreview();
       });
+
+      // Check Authentication Status
+      if (!localStorage.getItem('userEmail') || !localStorage.getItem('apiKey')) {
+        document.getElementById('authRequiredNotice').classList.remove('hidden');
+      }
     </script>
   </body>
 </html>

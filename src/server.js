@@ -474,24 +474,16 @@ let imageService; // Deklariere den Service außerhalbkk
     app.delete('/v1/image/:imageId', async (req, res) => {
       try {
         const { imageId } = req.params;
-        const imagePath = path.join(CONFIG.UPLOAD_DIR, `${imageId}.png`);
+        const userId = req.user.id;
 
-        // Lösche aus dem Memory-Store
+        // Nutze den ImageService zum Löschen
+        await req.imageService.deleteImage(imageId, userId);
+
+        // Lösche aus dem Memory-Store falls vorhanden
         if (global.imageStore) {
           global.imageStore.delete(imageId);
         }
 
-        try {
-          // Lösche von der Festplatte
-          await fsPromises.unlink(imagePath);
-        } catch (err) {
-          // Ignoriere ENOENT (Datei existiert nicht), aber wirf andere Fehler
-          if (err.code !== 'ENOENT') {
-            throw err;
-          }
-        }
-
-        // Immer 202 zurückgeben, da die Löschung als erfolgreich gilt
         res.status(202).send();
       } catch (error) {
         console.error('Image deletion failed:', error);

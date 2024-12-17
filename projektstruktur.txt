@@ -5,26 +5,38 @@
 ├── jest.config.js
 ├── package-lock.json
 ├── package.json
+├── postcss.config.js
 ├── prettier.config.js
 ├── projektstruktur.txt
+├── public
+│   └── css
+│       └── output.css
 ├── src
-│   ├── config.js
+│   ├── css
+│   │   └── styles.css
 │   ├── db
 │   │   ├── migrate.js
-│   │   ├── migrations
-│   │   │   ├── 001_initial_setup.js
-│   │   │   └── 003_add_template_data.js
-│   │   └── schema.js
+│   │   └── migrations
+│   │       ├── 001_initial_setup.js
+│   │       ├── 002_add_template_data.js
+│   │       └── 003_add_image_storage.js
 │   ├── imageGenerator.js
 │   ├── middleware
 │   │   ├── auth.js
 │   │   └── templateProcessing.js
 │   ├── public
 │   │   ├── auth.html
+│   │   ├── css
+│   │   │   └── output.css
+│   │   ├── doc.html
+│   │   ├── gallery.html
+│   │   ├── index.html
 │   │   └── test.html
 │   ├── routes
 │   │   └── auth.js
 │   ├── server.js
+│   ├── services
+│   │   └── imageService.js
 │   ├── templates.db
 │   ├── uploads
 │   │   ├── 1734106431680.png
@@ -35,7 +47,8 @@
 │   │   ├── img-1734250485851-6cgkva31u9e.png
 │   │   └── img-1734250521256-j0viqchq41.png
 │   └── utils
-│       └── database.js
+│       └── checkDb.js
+├── tailwind.config.js
 ├── test.db
 ├── tests
 │   ├── imageGenerator.test.js
@@ -159,6 +172,73 @@
     ├── img-1734280768237-m93x5lovu0l.png
     ├── img-1734280769487-084zosovpfer.png
     ├── img-1734280770727-ndt7v032yjj.png
-    └── img-1734280771908-u6cofuoim.png
+    ├── img-1734280771908-u6cofuoim.png
+    ├── img-1734329827149-wu0p5x8ffz.png
+    ├── img-1734329828705-qzgg7wevqni.png
+    ├── img-1734329829951-6ngu8d0x3od.png
+    ├── img-1734329831174-28izomvaxg1.png
+    ├── img-1734329832523-xtqy0mw157.png
+    ├── img-1734329833770-pshg8yg6din.png
+    ├── img-1734329907519-zmju3rkq39e.png
+    ├── img-1734329908800-rj7vi0fwuod.png
+    ├── img-1734329910062-509rlrxxe6h.png
+    ├── img-1734329911339-t8afys6iaa.png
+    ├── img-1734329913321-ium40p63ru.png
+    ├── img-1734329914595-igwmf1k4oi.png
+    ├── img-1734329915841-7vbic34627s.png
+    ├── img-1734329917089-bcx991hgl66.png
+    ├── img-1734329918362-ibp44mqfcz9.png
+    ├── img-1734329919573-bujddz26mz.png
+    ├── img-1734331064183-1bpleo01545.png
+    ├── img-1734331065434-o3na4c6ggd.png
+    ├── img-1734331066671-x0u5x4rfysg.png
+    ├── img-1734331067884-bzttmobjn07.png
+    ├── img-1734331069145-fen5ut0puqb.png
+    ├── img-1734331070368-tslrfufeqzq.png
+    ├── img-1734331073500-eu9wsugjkm6.png
+    ├── img-1734331074778-h89m3ntxrui.png
+    ├── img-1734331076047-mbdxztzc67.png
+    ├── img-1734331077341-0vh9htvibdg.png
+    ├── img-1734353247813-4efmedtlhsa.png
+    ├── img-1734353258246-p6j7rtn4wj.png
+    ├── img-1734353263877-pakjfj67yde.png
+    ├── img-1734353346982-fiaudcwx39i.png
+    ├── img-1734354474807-q3u7r4hasd.png
+    ├── img-1734354735974-79q2wfyaizl.png
+    ├── img-1734354738405-ucs80yj05t.png
+    ├── img-1734354740418-7p1epxzkna5.png
+    ├── img-1734354742749-grgy0zwveo9.png
+    ├── img-1734356694476-h15qjwr5ob9.png
+    ├── img-1734356699654-sf8iqziscks.png
+    ├── img-1734356701268-qej5fcmi8d9.png
+    ├── img-1734356702747-o82wbg2vcn.png
+    ├── img-1734356704811-eno27h313k4.png
+    ├── img-1734356706153-uyylzmo8i9q.png
+    ├── img-1734356706697-dtnx7u8ov5.png
+    ├── img-1734356708262-wabyvwhu1wc.png
+    ├── img-1734357914437-wuebu2qi31.png
+    ├── img-1734358024572-8s6krxk61g7.png
+    ├── img-1734358024877-em65gflayfu.png
+    ├── img-1734358025095-f1ivegd7p5j.png
+    ├── img-1734358025095-xu2tp4jbbb.png
+    ├── img-1734358025229-akky9r7kqi.png
+    ├── img-1734358025246-dzus9noe91l.png
+    ├── img-1734358869270-rwnhqlmxi8g.png
+    ├── img-1734358873922-qrexrpqzbps.png
+    ├── img-1734358908364-j6hlhtcrwpg.png
+    ├── img-1734359263574-tj1x2qwfk7.png
+    ├── img-1734359356368-9mlk98zbq17.png
+    ├── img-1734359417362-w2cv1n0ztt9.png
+    ├── img-1734359458564-kmpohgct618.png
+    ├── img-1734359755251-7sno3gwna4s.png
+    ├── img-1734359782319-a0mbwmiw82l.png
+    ├── img-1734360730908-sk0od46ijj.png
+    ├── img-1734378839685-nfxdmnto43.png
+    ├── img-1734378858196-pidkcu6fgk.png
+    ├── img-1734379399384-xiw2ceni5x9.png
+    ├── img-1734379467231-vdchwgzevum.png
+    ├── img-1734379478948-fq8xdhlrw56.png
+    ├── img-1734380314545-ntoe40qjjbj.png
+    └── img-1734380413812-cdx6xvb7inc.png
 
-11 directories, 150 files
+16 directories, 225 files

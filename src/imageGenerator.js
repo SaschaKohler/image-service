@@ -13,25 +13,34 @@ async function generateImage({
   fullScreen = false,
   viewportWidth,
   viewportHeight,
-  template_data = {}, // Änderung hier: template_data statt templateData
-  templateData = {}, // Behalte alte Variable für Kompatibilität
+  template_data = {},
 }) {
   if (!html) {
     throw new Error('HTML content is required');
   }
 
   try {
-    // Nutze entweder template_data oder templateData
-    const data = template_data || templateData;
+    // Format Google Fonts URL
+    const formattedGoogleFonts = googleFonts
+      .split(',')
+      .map(font => font.trim())
+      .filter(Boolean)
+      .map(font => {
+        // Ersetze Leerzeichen durch + und entferne spezielle Schriftschnitte in Klammern
+        const formattedFont = font.replace(/\s+/g, '+').replace(/\(.*?\)/g, '');
+        return formattedFont;
+      })
+      .join('|');
 
-    console.log('Processing template with data:', data); // Debug-Log
+    const fontLink = formattedGoogleFonts
+      ? `<link href="https://fonts.googleapis.com/css2?family=${formattedGoogleFonts}&display=swap" rel="stylesheet">`
+      : '';
 
     // Kompiliere und verarbeite das Template mit Handlebars
-    let processedHtml = html;
+    let processedHtml;
     try {
       const template = Handlebars.compile(html);
-      processedHtml = template(data);
-      console.log('Processed HTML:', processedHtml); // Debug-Log
+      processedHtml = template(template_data);
     } catch (error) {
       console.error('Template processing error:', error);
       throw new Error(`Template processing failed: ${error.message}`);
@@ -43,7 +52,7 @@ async function generateImage({
       <html>
         <head>
           <meta charset="UTF-8">
-          ${googleFonts ? `<link href="https://fonts.googleapis.com/css2?family=${googleFonts.replace(/\s/g, '+')}" rel="stylesheet">` : ''}
+          ${fontLink}
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
             * {
@@ -51,23 +60,13 @@ async function generateImage({
               padding: 0;
               box-sizing: border-box;
             }
+            ${googleFonts ? formatFontFaces(googleFonts) : ''}
             ${css}
           </style>
         </head>
         <body>${processedHtml}</body>
       </html>
     `;
-
-    console.log('Generating image with options:', {
-      templateVariables: Object.keys(data),
-      viewport:
-        viewportWidth && viewportHeight
-          ? { width: viewportWidth, height: viewportHeight }
-          : undefined,
-      selector,
-      delay: msDelay,
-      fullPage: fullScreen,
-    });
 
     const options = {
       html: fullHtml,
@@ -92,7 +91,8 @@ async function generateImage({
     if (msDelay > 0) options.waitForTimeout = msDelay;
     if (fullScreen) options.fullPage = true;
 
-    options.waitForTimeout = (options.waitForTimeout || 0) + 100;
+    // Zusätzliche Wartezeit für Schriftarten
+    options.waitForTimeout = (options.waitForTimeout || 0) + 500;
 
     const image = await nodeHtmlToImage(options);
     return image;
@@ -100,6 +100,22 @@ async function generateImage({
     console.error('Image generation error:', error);
     throw new Error(`Image generation failed: ${error.message}`);
   }
+}
+// Hilfsfunktion um @font-face Deklarationen zu generieren
+function formatFontFaces(googleFonts) {
+  return googleFonts
+    .split(',')
+    .map(font => {
+      const fontName = font.trim().replace(/\(.*?\)/g, '');
+      return `
+        @font-face {
+          font-family: '${fontName}';
+          font-display: swap;
+          src: local('${fontName}');
+        }
+      `;
+    })
+    .join('\n');
 }
 
 module.exports = generateImage;

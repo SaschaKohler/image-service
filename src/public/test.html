@@ -234,7 +234,6 @@
       }
 
       document.addEventListener('DOMContentLoaded', () => {
-        // Initialize ACE editors
         const htmlEditor = ace.edit('htmlEditor');
         htmlEditor.setTheme('ace/theme/chrome');
         htmlEditor.session.setMode('ace/mode/html');
@@ -278,20 +277,82 @@
         let previewTimeout;
         const updatePreview = () => {
           try {
-            const templateData = JSON.parse(templateDataEditor.getValue());
+            let templateData = {};
+            try {
+              const jsonContent = templateDataEditor.getValue().trim();
+              if (jsonContent) {
+                templateData = JSON.parse(jsonContent);
+              }
+            } catch (error) {
+              console.warn('Invalid JSON, using empty object:', error);
+            }
+
             const html = htmlEditor.getValue();
             const css = cssEditor.getValue();
+            const isFullHtml =
+              html.trim().toLowerCase().startsWith('<!doctype') ||
+              html.trim().toLowerCase().startsWith('<html');
 
-            // Simple Handlebars-like Template Verarbeitung
-            const processedHtml = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-              return templateData[key] || match;
-            });
+            let processedHtml;
+            if (isFullHtml) {
+              // Für vollständige HTML-Dokumente
+              processedHtml = html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+                return templateData[key] || match;
+              });
+            } else {
+              // Für HTML-Fragmente - Wrapper mit einzigartigem Klassennamen
+              processedHtml = `
+        <div class="preview-content-wrapper">
+          ${html.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+            return templateData[key] || match;
+          })}
+        </div>
+      `;
+            }
+
+            // Isoliere CSS durch Scoping auf den Preview-Container
+            const scopedCss = isFullHtml
+              ? css
+              : `
+      .preview-content-wrapper {
+        ${css}
+      }
+      .preview-content-wrapper body {
+        margin: unset;
+        padding: unset;
+        display: unset;
+        justify-content: unset;
+        align-items: unset;
+        min-height: unset;
+      }
+    `;
+            const googleFonts = document
+              .getElementById('googleFonts')
+              .value.split(',')
+              .map(font => font.trim())
+              .filter(Boolean);
+
+            const fontLinks =
+              googleFonts.length > 0
+                ? `<link href="https://fonts.googleapis.com/css2?family=${googleFonts.join('|').replace(/\s+/g, '+')}&display=swap" rel="stylesheet">`
+                : '';
 
             const preview = document.getElementById('preview');
+            // Erstelle einen isolierten Container für die Preview
             preview.innerHTML = `
-          <style>${css}</style>
-          ${processedHtml}
-        `;
+  ${fontLinks}
+      <style>
+        #preview-container {
+          width: 100%;
+          min-height: 200px;
+          overflow: auto;
+        }
+        ${scopedCss}
+      </style>
+      <div id="preview-container">
+        ${processedHtml}
+      </div>
+    `;
           } catch (error) {
             console.error('Preview error:', error);
           }
@@ -312,24 +373,35 @@
         window.generateImage = async () => {
           const response = document.getElementById('response');
           response.innerHTML = `
-        <div class="animate-pulse flex space-x-4 bg-gray-50 p-4 rounded-lg">
-            <div class="flex-1 space-y-4 py-1">
-                <div class="h-4 bg-gray-300 rounded w-3/4"></div>
-                <div class="space-y-2">
-                    <div class="h-4 bg-gray-300 rounded"></div>
-                </div>
-            </div>
+    <div class="animate-pulse flex space-x-4 bg-gray-50 p-4 rounded-lg">
+      <div class="flex-1 space-y-4 py-1">
+        <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+        <div class="space-y-2">
+          <div class="h-4 bg-gray-300 rounded"></div>
         </div>
-    `;
+      </div>
+    </div>
+  `;
           response.classList.remove('hidden');
 
           try {
-            let templateData;
+            let templateData = {};
             try {
-              templateData = JSON.parse(templateDataEditor.getValue().trim());
+              const jsonContent = templateDataEditor.getValue().trim();
+              if (jsonContent) {
+                templateData = JSON.parse(jsonContent);
+              }
             } catch (error) {
-              throw new Error('Invalid template data JSON: ' + error.message);
+              console.warn('Invalid JSON, using empty object:', error);
             }
+
+            // Format Google Fonts
+            const googleFonts = document
+              .getElementById('googleFonts')
+              .value.split(',')
+              .map(font => font.trim())
+              .filter(Boolean)
+              .join(',');
 
             const res = await fetch('/v1/image', {
               method: 'POST',
@@ -346,7 +418,7 @@
                 viewport_width: parseInt(document.getElementById('viewportWidth').value) || 800,
                 viewport_height: parseInt(document.getElementById('viewportHeight').value) || 600,
                 device_scale: parseFloat(document.getElementById('deviceScale').value) || 1,
-                google_fonts: document.getElementById('googleFonts').value,
+                google_fonts: googleFonts,
                 ms_delay: parseInt(document.getElementById('renderDelay').value) || 0,
               }),
             });
