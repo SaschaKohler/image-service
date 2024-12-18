@@ -8,10 +8,18 @@ function processTemplateRequest(req, res, next) {
     const processValue = value => {
       if (typeof value === 'string') {
         // Replace escaped handlebars syntax
-        return value
-          .replace(/\\{\\{(\w+)\\}\\}/g, '{{$1}}')
-          .replace(/\\\{\\\{(\w+)\\\}\\\}/g, '{{$1}}')
-          .replace(/\{\{\{(\w+)\}\}\}/g, '{{$1}}');
+        return (
+          value
+            .replace(/\\{\\{(\w+)\\}\\}/g, '{{$1}}')
+            .replace(/\\\{\\\{(\w+)\\\}\\\}/g, '{{$1}}')
+            .replace(/\{\{\{(\w+)\}\}\}/g, '{{$1}}')
+            // Newlines
+            .replace(/\\n/g, '\n')
+            // Quotes
+            .replace(/\\"/g, '"')
+            // Backslashes
+            .replace(/\\\\/g, '\\')
+        );
       }
       if (typeof value === 'object' && value !== null) {
         return Array.isArray(value)
