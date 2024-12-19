@@ -75,7 +75,73 @@
             Use this interface to test the HTML to Image conversion with live preview.
           </p>
         </div>
+        <!-- Aktualisiere den Header-Bereich in test.html -->
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-gray-900">Test Interface</h1>
+          <p class="mt-1 text-sm text-gray-500">
+            Use this interface to test the HTML to Image conversion with live preview.
+          </p>
 
+          <!-- Füge API Credentials Box hinzu -->
+          <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200" id="credentialsBox">
+            <h3 class="text-sm font-medium text-blue-900 mb-2">Your API Credentials</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-blue-700">Email</label>
+                <div class="flex items-center mt-1">
+                  <input
+                    type="text"
+                    id="userEmail"
+                    readonly
+                    class="block w-full rounded-md border-0 py-1.5 text-sm text-blue-900 bg-blue-50 ring-1 ring-inset ring-blue-300"
+                  />
+                  <button
+                    onclick="copyToClipboard('userEmail')"
+                    class="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                  >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs text-blue-700">API Key</label>
+                <div class="flex items-center mt-1">
+                  <input
+                    type="text"
+                    id="userApiKey"
+                    readonly
+                    class="block w-full rounded-md border-0 py-1.5 text-sm text-blue-900 bg-blue-50 ring-1 ring-inset ring-blue-300"
+                  />
+                  <button
+                    onclick="copyToClipboard('userApiKey')"
+                    class="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                  >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-2">
+              <p class="text-xs text-blue-600">
+                Base64 encoded: <span id="base64Credentials" class="font-mono"></span>
+              </p>
+            </div>
+          </div>
+        </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Editor Section -->
           <div class="space-y-6">
@@ -234,6 +300,7 @@
       }
 
       document.addEventListener('DOMContentLoaded', () => {
+        updateCredentialsDisplay();
         const htmlEditor = ace.edit('htmlEditor');
         htmlEditor.setTheme('ace/theme/chrome');
         htmlEditor.session.setMode('ace/mode/html');
@@ -506,7 +573,42 @@
         `;
           }
         };
+        function updateCredentialsDisplay() {
+          const email = localStorage.getItem('userEmail');
+          const apiKey = localStorage.getItem('apiKey');
 
+          if (email && apiKey) {
+            document.getElementById('userEmail').value = email;
+            document.getElementById('userApiKey').value = apiKey;
+
+            // Berechne Base64
+            const base64Credentials = btoa(`${email}:${apiKey}`);
+            document.getElementById('base64Credentials').textContent = base64Credentials;
+
+            // Zeige die Box
+            document.getElementById('credentialsBox').classList.remove('hidden');
+          } else {
+            document.getElementById('credentialsBox').classList.add('hidden');
+          }
+        }
+
+        function copyToClipboard(elementId) {
+          const element = document.getElementById(elementId);
+          element.select();
+          document.execCommand('copy');
+
+          // Visual feedback
+          const button = element.nextElementSibling;
+          const originalColor = button.classList.contains('text-blue-600');
+
+          button.classList.remove('text-blue-600');
+          button.classList.add('text-green-600');
+
+          setTimeout(() => {
+            button.classList.remove('text-green-600');
+            button.classList.add('text-blue-600');
+          }, 1000);
+        }
         // URL Copy Funktion
         window.copyImageUrl = (button, url) => {
           navigator.clipboard.writeText(url).then(() => {
