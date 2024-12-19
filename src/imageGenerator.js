@@ -52,6 +52,7 @@ async function generateImage({
       <html>
         <head>
           <meta charset="UTF-8">
+         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
           ${fontLink}
           <script src="https://cdn.tailwindcss.com"></script>
           <style>
@@ -60,12 +61,13 @@ async function generateImage({
               padding: 0;
               box-sizing: border-box;
             }
-            @font-face {
-              font-family: 'Segoe UI Emoji';
-              src: local('Segoe UI Emoji');
+            html, body {
+              font-family: 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji', 
+                          'Segoe UI Symbol', 'Android Emoji', sans-serif;
             }
-            body {
-              font-family: 'Segoe UI Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            .emoji {
+              font-family: 'Noto Color Emoji', 'Segoe UI Emoji', 'Apple Color Emoji',
+                          'Segoe UI Symbol', 'Android Emoji', sans-serif !important;
             }
             ${googleFonts ? formatFontFaces(googleFonts) : ''}
             ${css}
@@ -104,7 +106,7 @@ async function generateImage({
     if (fullScreen) options.fullPage = true;
 
     // Zusätzliche Wartezeit für Schriftarten
-    options.waitForTimeout = (options.waitForTimeout || 0) + 500;
+    options.waitForTimeout = (options.waitForTimeout || 0) + 1000;
 
     const image = await nodeHtmlToImage(options);
     return image;
