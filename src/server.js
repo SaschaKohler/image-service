@@ -378,8 +378,23 @@ let imageService; // Deklariere den Service außerhalbkk
 
         await fsPromises.writeFile(imagePath, image);
 
-        // Speichere das Bild in der Datenbank
-        await imageService.recordGeneratedImage(req.user.id, imagePath);
+        // Speichere das Bild mit allen verfügbaren Metadaten
+        const metadata = {
+          html,
+          css,
+          google_fonts,
+          viewport_width,
+          viewport_height,
+          device_scale,
+          template_data: template_data ? JSON.stringify(template_data) : null,
+          // Füge auch die Bildgenerierungs-Parameter hinzu
+          selector,
+          ms_delay,
+          render_when_ready,
+          full_screen,
+        };
+
+        await imageService.recordGeneratedImage(req.user.id, imagePath, metadata);
 
         if (!global.imageStore) global.imageStore = new Map();
         global.imageStore.set(imageId, image);

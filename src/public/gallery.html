@@ -302,40 +302,106 @@
         const fullUrl = `${window.location.origin}/uploads/${image.original_filename}`;
         const date = new Date(image.created_at);
 
+        // HTML formatieren für die Anzeige
+        const formattedHtml = image.html
+          ? `<pre class="mt-1 p-2 bg-gray-50 rounded text-xs overflow-x-auto whitespace-pre-wrap language-html">${escapeHtml(image.html)}</pre>`
+          : '<p class="text-gray-500 text-sm">No HTML code available</p>';
+
+        // CSS formatieren für die Anzeige
+        const formattedCss = image.css
+          ? `<pre class="mt-1 p-2 bg-gray-50 rounded text-xs overflow-x-auto whitespace-pre-wrap language-css">${escapeHtml(image.css)}</pre>`
+          : '<p class="text-gray-500 text-sm">No CSS code available</p>';
+
         return `
-    <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden relative group" data-image-id="${image.id}">
-      <div class="absolute top-2 left-2 z-10">
-        <input type="checkbox" 
-               class="image-checkbox h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-               onclick="toggleImageSelection('${image.id}', this)">
-      </div>
-      <div class="cursor-pointer" onclick="showPreview('${image.file_path}', '${fullUrl}')">
-        <img src="/uploads/${image.original_filename}" 
-             alt="Generated image" 
-             class="w-full h-48 object-cover hover:opacity-90 transition-opacity">
-      </div>
-      <div class="p-4">
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-xs text-gray-500">${date.toLocaleString()}</span>
+        <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div class="cursor-pointer" onclick="showPreview('${image.file_path}', '${fullUrl}')">
+                <img src="/uploads/${image.original_filename}" 
+                     alt="Generated image" 
+                     class="w-full h-48 object-cover hover:opacity-90 transition-opacity">
+            </div>
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs text-gray-500">${date.toLocaleString()}</span>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                    <input type="text" value="${fullUrl}" readonly 
+                           class="flex-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 text-sm px-2"
+                           onclick="this.select()">
+                    <button class="copy-btn rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                            data-clipboard-text="${fullUrl}">
+                        Copy
+                    </button>
+                </div>
+
+                <div class="mt-4 border-t border-gray-100 pt-4">
+                    <details class="group">
+                        <summary class="flex cursor-pointer items-center justify-between font-medium text-gray-900 marker:content-none">
+                            <span class="text-sm">Technical Details</span>
+                            <svg class="h-5 w-5 transition group-open:-rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </summary>
+                        
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-700">HTML Template</h4>
+                                ${formattedHtml}
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-700">CSS Styles</h4>
+                                ${formattedCss}
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-700">Template Data</h4>
+                                <pre class="mt-1 p-2 bg-gray-50 rounded text-xs overflow-x-auto whitespace-pre-wrap">${
+                                  image.template_data
+                                    ? JSON.stringify(JSON.parse(image.template_data), null, 2)
+                                    : 'No template data available'
+                                }</pre>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-700">Font Information</h4>
+                                <div class="mt-1 text-xs text-gray-600">
+                                    ${
+                                      image.google_fonts
+                                        ? `<ul class="list-disc pl-4">
+                                            ${image.google_fonts
+                                              .split(',')
+                                              .map(font => `<li>${font.trim()}</li>`)
+                                              .join('')}
+                                        </ul>`
+                                        : 'No custom fonts used'
+                                    }
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-medium text-gray-700">Image Format</h4>
+                                <div class="mt-1 text-xs text-gray-600">
+                                    <ul class="space-y-1">
+                                        <li>Format: ${image.format || 'PNG'}</li>
+                                        <li>Dimensions: ${image.viewport_width || 'N/A'} x ${image.viewport_height || 'N/A'}</li>
+                                        <li>Scale: ${image.device_scale || '1'}x</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
         </div>
-        <div class="mt-2 flex items-center gap-2">
-          <input type="text" value="${fullUrl}" readonly 
-                 class="flex-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 text-sm px-2"
-                 onclick="this.select()">
-          <button class="copy-btn rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-                  data-clipboard-text="${fullUrl}">
-            Copy
-          </button>
-          <button onclick="deleteImage('${image.id}')" 
-                  class="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-colors">
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
+    `;
       }
 
+      // Hilfsfunktion zum Escapen von HTML
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
       function toggleImageSelection(imageId, checkbox) {
         if (checkbox.checked) {
           selectedImages.add(imageId);

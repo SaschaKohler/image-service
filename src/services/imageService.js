@@ -75,8 +75,7 @@ class ImageService {
     }
   }
 
-  async recordGeneratedImage(userId, filePath) {
-    // Überprüfe zuerst ob noch generiert werden darf
+  async recordGeneratedImage(userId, filePath, requestData = {}) {
     const canGenerate = await this.canGenerate(userId);
     if (!canGenerate) {
       throw new Error('Monthly image generation limit reached');
@@ -86,30 +85,53 @@ class ImageService {
     const fileStats = await fs.stat(filePath);
     const now = new Date().toISOString();
 
-    // Transaktion starten
+    const {
+      html,
+      css,
+      google_fonts,
+      viewport_width,
+      viewport_height,
+      device_scale,
+      template_data,
+      template_id, // Falls das Bild von einem Template generiert wurde
+    } = requestData;
+
     await this.db.run('BEGIN TRANSACTION');
 
     try {
-      // Speichere das Bild
+      // Speichere das Bild mit erweiterten Informationen
       await this.db.run(
         `
         INSERT INTO generated_images (
           id, user_id, file_path, original_filename, 
-          created_at, file_size
-        ) VALUES (?, ?, ?, ?, ?, ?)
+          created_at, file_size, template_id,
+          html, css, google_fonts, 
+          viewport_width, viewport_height, device_scale,
+          template_data
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-        [imageId, userId, filePath, path.basename(filePath), now, fileStats.size]
+        [
+          imageId,
+          userId,
+          filePath,
+          path.basename(filePath),
+          now,
+          fileStats.size,
+          template_id || null,
+          html || null,
+          css || null,
+          google_fonts || null,
+          viewport_width || null,
+          viewport_height || null,
+          device_scale || null,
+          template_data ? JSON.stringify(template_data) : null,
+        ]
       );
 
-      // Aktualisiere den Nutzungszähler
       await this.updateUsageCounter(userId);
-
-      // Transaktion abschließen
       await this.db.run('COMMIT');
-
       return imageId;
     } catch (error) {
-      // Bei Fehler Transaktion zurückrollen
       await this.db.run('ROLLBACK');
       throw error;
     }
@@ -118,10 +140,26 @@ class ImageService {
   async getUserImages(userId, limit = 100, offset = 0) {
     return await this.db.all(
       `
-      SELECT * FROM generated_images 
-      WHERE user_id = ? 
-      ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
+    SELECT 
+      gi.id,
+      gi.user_id,
+      gi.file_path,
+      gi.original_filename,
+      gi.created_at,
+      gi.file_size,
+      COALESCE(gi.html, t.html) as html,
+      COALESCE(gi.css, t.css) as css,
+      COALESCE(gi.google_fonts, t.google_fonts) as google_fonts,
+      COALESCE(gi.viewport_width, t.viewport_width) as viewport_width,
+      COALESCE(gi.viewport_height, t.viewport_height) as viewport_height,
+      COALESCE(gi.device_scale, t.device_scale) as device_scale,
+      COALESCE(gi.template_data, t.template_data) as template_data,
+      gi.template_id
+    FROM generated_images gi
+    LEFT JOIN templates t ON gi.template_id = t.id
+    WHERE gi.user_id = ? 
+    ORDER BY gi.created_at DESC
+    LIMIT ? OFFSET ?
     `,
       [userId, limit, offset]
     );
