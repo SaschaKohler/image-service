@@ -60,6 +60,13 @@ async function generateImage({
               padding: 0;
               box-sizing: border-box;
             }
+            @font-face {
+              font-family: 'Segoe UI Emoji';
+              src: local('Segoe UI Emoji');
+            }
+            body {
+              font-family: 'Segoe UI Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
             ${googleFonts ? formatFontFaces(googleFonts) : ''}
             ${css}
           </style>
@@ -75,7 +82,12 @@ async function generateImage({
       waitUntil: renderWhenReady ? 'networkidle0' : 'load',
       puppeteerArgs: {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--font-render-hinting=none',
+        ],
       },
     };
 
